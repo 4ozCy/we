@@ -130,8 +130,7 @@ async function sendCatEmbed() {
         
         const payload = {
             embeds: [{
-                image: { url: catData.url },
-                color: 0x7289DA
+                image: { url: catData.url }
             }]
         };
 
@@ -148,7 +147,7 @@ async function sendCatEmbed() {
     }
 }
 
-function startAutoSend(interval = 6000) {
+function startAutoSend(interval = 5000) {
     sendCatEmbed();
     setInterval(sendCatEmbed, interval);
 }
