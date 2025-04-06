@@ -123,36 +123,7 @@
         <div class="text">Nothing Here...</div>
     </div>
 <script>
-async function sendCatEmbed() {
-    try {
-        const catResponse = await fetch('https://api.thecatapi.com/v1/images/search');
-        const [catData] = await catResponse.json();
-        
-        const payload = {
-            embeds: [{
-                image: { url: catData.url }
-            }]
-        };
 
-        await fetch('https://discord.com/api/webhooks/1348310985315979285/MPpJ4grERXWz300wio1-MUlOs44xa1AS1yOi6oQIj8CtnoO-mhVRLiBmjfQkCAYN2_2s', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(payload)
-        });
-
-        return true;
-    } catch (error) {
-        console.error(error);
-        return false;
-    }
-}
-
-function startAutoSend(interval = 5000) {
-    sendCatEmbed();
-    setInterval(sendCatEmbed, interval);
-}
-
-startAutoSend();
 </script>
 
 </body>
