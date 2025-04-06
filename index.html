@@ -1,130 +1,19 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Celvyn</title>
-    <style>
-        @keyframes blinkCursor {
-            50% {
-                border-right-color: transparent;
-            }
-        }
-
-        @keyframes typeAndDelete {
-            0%, 10% {
-                width: 0;
-            }
-            45%, 55% {
-                width: 10em;
-            }
-            90%, 100% {
-                width: 0;
-            }
-        }
-
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            background-color: #111;
-            margin: 0;
-        }
-
-        .terminal-loader {
-            border: 0.1em solid #333;
-            background-color: #1a1a1a;
-            color: #0f0;
-            font-family: "Courier New", Courier, monospace;
-            font-size: 1em;
-            padding: 2em;
-            width: 14em;
-            height: 7em;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            border-radius: 4px;
-            position: relative;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            justify-content: center;
-            text-align: left;
-        }
-
-        .terminal-header {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1.5em;
-            background-color: #333;
-            border-top-left-radius: 4px;
-            border-top-right-radius: 4px;
-            padding: 0 0.4em;
-            box-sizing: border-box;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-        }
-
-        .terminal-controls {
-            display: flex;
-        }
-
-        .control {
-            width: 0.6em;
-            height: 0.6em;
-            margin-left: 0.4em;
-            border-radius: 50%;
-            background-color: #777;
-        }
-
-        .control.close {
-            background-color: #e33;
-        }
-
-        .control.minimize {
-            background-color: #ee0;
-        }
-
-        .control.maximize {
-            background-color: #0b0;
-        }
-
-        .terminal-title {
-            color: #eee;
-            font-size: 0.9em;
-        }
-
-        .text {
-            display: inline-block;
-            white-space: nowrap;
-            overflow: hidden;
-            border-right: 0.2em solid green;
-            animation:
-                typeAndDelete 4s steps(15) infinite,
-                blinkCursor 0.5s step-end infinite alternate;
-            align-self: flex-start;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Celvyn</title>
 </head>
 <body>
-
-    <div class="terminal-loader">
-        <div class="terminal-header">
-            <div class="terminal-title">Status</div>
-            <div class="terminal-controls">
-                <div class="control close"></div>
-                <div class="control minimize"></div>
-                <div class="control maximize"></div>
-            </div>
-        </div>
-        <div class="text">Nothing Here...</div>
-    </div>
-<script>
-
-</script>
-
+  <pre id="raw"></pre>
+  <script>
+    fetch(window.location.pathname)
+      .then(response => response.ok ? response.text() : Promise.reject('Failed to load'))
+      .then(data => { 
+        document.getElementById('raw').textContent = data;
+      })
+      .catch(error => document.getElementById('raw').textContent = `Error: ${error}`);
+  </script>
 </body>
 </html>
