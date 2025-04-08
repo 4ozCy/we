@@ -1,69 +1,44 @@
 const express = require('express');
-const axios = require('axios');
+const fetch = require('node-fetch');
 const app = express();
 const PORT = 3000;
 
-app.get('/', async (req, res) => {
+async function fetchText(url, res) {
   try {
-    const response = await axios.get('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua');
-    res.type('text/plain').send(response.data);
+    const response = await fetch(url);
+    const data = await response.text();
+    res.type('text/plain').send(data);
   } catch {
     res.status(500).send('Failed to fetch script.');
   }
+}
+
+app.get('/', (req, res) => {
+  fetchText('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', res);
 });
 
-app.get('/tf', async (req, res) => {
-  try {
-    const response = await axios.get('https://raw.githubusercontent.com/4ozCy/aa/refs/heads/main/touch%20f1ing-obfuscated.lua');
-    res.type('text/plain').send(response.data);
-  } catch {
-    res.status(500).send('Failed to fetch script.');
-  }
+app.get('/tf', (req, res) => {
+  fetchText('https://raw.githubusercontent.com/4ozCy/aa/refs/heads/main/touch%20f1ing-obfuscated.lua', res);
 });
 
-app.get('/aimbot', async (req, res) => {
-  try {
-    const response = await axios.get('https://pastebin.com/raw/QE0GzMDq');
-    res.type('text/plain').send(response.data);
-  } catch {
-    res.status(500).send('Failed to fetch script.');
-  }
+app.get('/aimbot', (req, res) => {
+  fetchText('https://pastebin.com/raw/QE0GzMDq', res);
 });
 
-app.get('/tpwalk', async (req, res) => {
-  try {
-    const response = await axios.get('https://pastebin.com/raw/i5c8a0tv');
-    res.type('text/plain').send(response.data);
-  } catch {
-    res.status(500).send('Failed to fetch script.');
-  }
+app.get('/tpwalk', (req, res) => {
+  fetchText('https://pastebin.com/raw/i5c8a0tv', res);
 });
 
-app.get('/esp', async (req, res) => {
-  try {
-    const response = await axios.get('https://pastebin.com/raw/Hsvmj2mw');
-    res.type('text/plain').send(response.data);
-  } catch {
-    res.status(500).send('Failed to fetch script.');
-  }
+app.get('/esp', (req, res) => {
+  fetchText('https://pastebin.com/raw/Hsvmj2mw', res);
 });
 
-app.get('/fps', async (req, res) => {
-  try {
-    const response = await axios.get('https://pastebin.com/raw/M5ASu6cf');
-    res.type('text/plain').send(response.data);
-  } catch {
-    res.status(500).send('Failed to fetch script.');
-  }
+app.get('/fps', (req, res) => {
+  fetchText('https://pastebin.com/raw/M5ASu6cf', res);
 });
 
-app.get('/tp', async (req, res) => {
-  try {
-    const response = await axios.get('https://pastebin.com/raw/XSmS9zZQ');
-    res.type('text/plain').send(response.data);
-  } catch {
-    res.status(500).send('Failed to fetch script.');
-  }
+app.get('/tp', (req, res) => {
+  fetchText('https://pastebin.com/raw/XSmS9zZQ', res);
 });
 
 app.listen(PORT, () => {
