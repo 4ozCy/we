@@ -1,7 +1,7 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const app = express();
-const PORT = 3000;
+const PORT = 8080;
 
 async function fetchText(url, res) {
   try {
@@ -22,7 +22,7 @@ app.get('/tf', (req, res) => {
 });
 
 app.get('/aimbot', (req, res) => {
-  fetchText('https://pastebin.com/raw/QE0GzMDq', res);
+  fetchText('https://pastefy.app/3ChKbVJY/raw', res);
 });
 
 app.get('/tpwalk', (req, res) => {
@@ -30,15 +30,7 @@ app.get('/tpwalk', (req, res) => {
 });
 
 app.get('/esp', (req, res) => {
-  fetchText('https://pastebin.com/raw/Hsvmj2mw', res);
-});
-
-app.get('/fps', (req, res) => {
-  fetchText('https://pastebin.com/raw/M5ASu6cf', res);
-});
-
-app.get('/tp', (req, res) => {
-  fetchText('https://pastebin.com/raw/XSmS9zZQ', res);
+  fetchText('https://pastefy.app/lgzQL4sX/raw', res);
 });
 
 app.listen(PORT, () => {
