@@ -1,5 +1,6 @@
 const express = require('express');
 const fetch = require('node-fetch');
+const path = require('path');
 const app = express();
 const PORT = 8080;
 
@@ -31,6 +32,10 @@ app.get('/tpwalk', (req, res) => {
 
 app.get('/esp', (req, res) => {
   fetchText('https://pastefy.app/lgzQL4sX/raw', res);
+});
+
+app.get('/bypass', (req, res) => {
+  res.sendFile(path.join(__dirname, 'bypass.html'));
 });
 
 app.listen(PORT, () => {
