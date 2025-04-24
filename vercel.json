@@ -7,7 +7,7 @@
     },
     {
       "src": "index.html",
-      "src": "bypass.httml",
+      "src": "upload.httml",
       "use": "@vercel/static"
     }
   ],
