@@ -78,12 +78,19 @@ app.get('/a', (req, res) => {
 
 app.post('/b', upload.single('file'), (req, res) => {
   try {
+    console.log('File:', req.file);
+
     if (!req.file) {
+      console.log('No file uploaded');
       return res.status(400).json({ error: 'No file uploaded' });
     }
+
     const fileUrl = `https://celvyn.site/${encodeURIComponent(req.file.filename)}`;
+    console.log('File uploaded successfully:', fileUrl);
+
     res.json({ message: 'File uploaded successfully', url: fileUrl });
   } catch (error) {
+    console.error('Error uploading file:', error);
     res.status(400).json({ error: error.message });
   }
 });
