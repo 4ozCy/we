@@ -42,8 +42,6 @@ if (!fs.existsSync('uploads')) {
   fs.mkdirSync('uploads');
 }
 
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
-
 async function fetchText(url, res) {
   try {
     const response = await fetch(url);
@@ -53,6 +51,10 @@ async function fetchText(url, res) {
     res.status(500).send('Failed to fetch script.');
   }
 }
+
+app.get('/', (req, res) => {
+  fetchText('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', res);
+});
 
 app.get('/tf', (req, res) => {
   fetchText('https://raw.githubusercontent.com/4ozCy/aa/refs/heads/main/touch%20f1ing-obfuscated.lua', res);
