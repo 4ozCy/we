@@ -89,7 +89,7 @@
       <i data-lucide="upload" style="width: 40px; height: 40px;"></i>
     </div>
     <h2>Upload Video or Image</h2>
-    <form id="uploadForm" enctype="multipart/form-data" method="POST" action="https://celvyn.site/b">
+    <form id="uploadForm">
       <input type="file" id="fileInput" name="file" accept="image/*,video/*" required />
       <button type="submit">
         <i data-lucide="arrow-up-circle" style="vertical-align: middle; width: 18px; height: 18px;"></i>
@@ -102,28 +102,37 @@
   <script>
     lucide.createIcons();
 
-    const form = document.getElementById('uploadForm');
-    const resultDiv = document.getElementById('result');
-
-    form.addEventListener('submit', async (e) => {
+    document.getElementById('uploadForm').addEventListener('submit', function (e) {
       e.preventDefault();
-      const formData = new FormData(form);
 
-      try {
-        const response = await fetch('https://celvyn.site/b', {
-        'method: 'POST',
-         body: formData
-        });
-        const data = await response.json();
+      const file = document.getElementById('fileInput').files[0];
+      if (!file) return;
 
-        if (response.ok) {
-          resultDiv.innerHTML = `Success! File uploaded: <a href="${data.url}" target="_blank">${data.url}</a>`;
-        } else {
-          resultDiv.textContent = `Error: ${data.error}`;
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const xhr = new XMLHttpRequest();
+      xhr.open('POST', '/b', true);
+
+      xhr.onload = function () {
+        const result = document.getElementById('result');
+        try {
+          const response = JSON.parse(xhr.responseText);
+          if (xhr.status === 200) {
+            result.innerHTML = `Uploaded: <a href="${response.url}" target="_blank">${response.url}</a>`;
+          } else {
+            result.textContent = 'Error: ' + (response.error || 'Unknown error');
+          }
+        } catch (err) {
+          result.textContent = 'Error parsing server response.';
         }
-      } catch (error) {
-        resultDiv.textContent = `Error: ${error.message}`;
-      }
+      };
+
+      xhr.onerror = function () {
+        document.getElementById('result').textContent = 'Upload failed.';
+      };
+
+      xhr.send(formData);
     });
   </script>
 </body>
