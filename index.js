@@ -18,7 +18,7 @@ app.get('/', (req, res) => fetchText('https://raw.githubusercontent.com/4ozCy/Ce
 app.get('/tf', (req, res) => fetchText('https://raw.githubusercontent.com/4ozCy/aa/refs/heads/main/touch%20f1ing-obfuscated.lua', res));
 app.get('/aimbot', (req, res) => fetchText('https://pastefy.app/3ChKbVJY/raw', res));
 app.get('/tpwalk', (req, res) => fetchText('https://pastebin.com/raw/i5c8a0tv', res));
-app.get('/esp', (req, res) => fetchText('https://pastefy.app/lgzQL4sX/raw', res));
+app.get('/esp', (req, res) => fetchText('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/esp.lua', res));
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
