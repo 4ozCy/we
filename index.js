@@ -1,10 +1,11 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
+const fs = require('fs');
 const app = express();
 const PORT = 8080;
 
-async function fetchText(url, res) {
+async function text(url, res) {
   try {
     const response = await fetch(url);
     const data = await response.text();
@@ -14,11 +15,21 @@ async function fetchText(url, res) {
   }
 }
 
-app.get('/', (req, res) => fetchText('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', res));
-app.get('/tf', (req, res) => fetchText('https://raw.githubusercontent.com/4ozCy/aa/refs/heads/main/touch%20f1ing-obfuscated.lua', res));
-app.get('/aimbot', (req, res) => fetchText('https://pastefy.app/3ChKbVJY/raw', res));
-app.get('/tpwalk', (req, res) => fetchText('https://pastebin.com/raw/i5c8a0tv', res));
-app.get('/esp', (req, res) => fetchText('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/esp.lua', res));
+function file(filePath, res) {
+  fs.readFile(filePath, 'utf8', (err, data) => {
+    if (err) {
+      res.status(500).send('Failed to read local file.');
+    } else {
+      res.type('text/plain').send(data);
+    }
+  });
+}
+
+app.get('/', (req, res) => text('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', res));
+app.get('/tf', (req, res) => text('https://raw.githubusercontent.com/4ozCy/aa/refs/heads/main/touch%20f1ing-obfuscated.lua', res));
+app.get('/aimbot', (req, res) => text('https://pastefy.app/3ChKbVJY/raw', res));
+app.get('/tpwalk', (req, res) => text('https://pastebin.com/raw/i5c8a0tv', res));
+app.get('/esp', (req, res) => file(path.join(__dirname, 'esp.lua'), res));
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
