@@ -4,12 +4,10 @@
   "description": "A simple Express.js server to serve Lua scripts",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "dev": "nodemon index.js"
+    "start": "node index.js"
   },
   "dependencies": {
     "node-fetch": "^2.6.12",
-    "express": "^4.18.2",
-    "multer": "^1.4.5-lts.2"
+    "express": "^4.18.2"
   }
 }
