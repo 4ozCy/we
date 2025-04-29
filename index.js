@@ -30,6 +30,9 @@ app.get('/tf', (req, res) => text('https://raw.githubusercontent.com/4ozCy/aa/re
 app.get('/aimbot', (req, res) => text('https://pastefy.app/3ChKbVJY/raw', res));
 app.get('/tpwalk', (req, res) => text('https://pastebin.com/raw/i5c8a0tv', res));
 app.get('/esp', (req, res) => file(path.join(__dirname, 'esp.lua'), res));
+app.get('/ip', (req, res) => {
+  res.sendFile(path.join(__dirname, 'gyi.html'));
+});
 
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
