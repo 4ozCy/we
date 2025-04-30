@@ -71,8 +71,14 @@
             z-index: -1;
         }
 
-        #refresh-btn {
-            margin-top: 15px;
+        .buttons {
+            margin-top: 20px;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        button {
             padding: 10px 25px;
             font-size: 1em;
             border: none;
@@ -83,7 +89,7 @@
             transition: background 0.3s;
         }
 
-        #refresh-btn:hover {
+        button:hover {
             background: #00ccb3;
         }
     </style>
@@ -93,7 +99,10 @@
     <div class="container">
         <h1>Your IP Address</h1>
         <p id="ip-address" class="loading">Loading...</p>
-        <button id="refresh-btn">Refresh IP</button>
+        <div class="buttons">
+            <button id="copy-btn">Copy</button>
+            <button id="refresh-btn">Refresh</button>
+        </div>
     </div>
 
     <script>
@@ -102,7 +111,7 @@
             ipElement.textContent = 'Loading...';
             ipElement.classList.add('loading');
             fetch('https://api.ipify.org?format=json')
-                .then(response => response.json())
+                .then(res => res.json())
                 .then(data => {
                     ipElement.textContent = data.ip;
                     ipElement.classList.remove('loading');
@@ -113,7 +122,13 @@
                 });
         }
 
-        document.getElementById('refresh-btn').addEventListener('click', fetchIP);
+        document.getElementById('refresh-btn').onclick = fetchIP;
+
+        document.getElementById('copy-btn').onclick = () => {
+            const ip = document.getElementById('ip-address').textContent;
+            navigator.clipboard.writeText(ip);
+        };
+
         fetchIP();
 
         const canvas = document.getElementById('bg-canvas');
@@ -155,11 +170,11 @@
 
         function animateParticles() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach(particle => {
-                particle.update();
-                particle.draw();
-                if (particle.size <= 0.2) {
-                    particles.splice(particles.indexOf(particle), 1);
+            particles.forEach(p => {
+                p.update();
+                p.draw();
+                if (p.size <= 0.2) {
+                    particles.splice(particles.indexOf(p), 1);
                     particles.push(new Particle());
                 }
             });
