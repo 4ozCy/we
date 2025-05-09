@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Added viewport -->
   <title>Discord User Info</title>
   <style>
     * {
@@ -14,46 +15,48 @@
       background: linear-gradient(135deg, #1e1e2f, #0f0f1f);
       color: #e0e0e0;
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      padding: 40px;
+      padding: 20px; /* Reduced padding for mobile */
       display: flex;
       flex-direction: column;
       align-items: center;
+      min-height: 100vh; /* Ensure body takes full height */
     }
 
     h1 {
       margin-bottom: 20px;
-      font-size: 32px;
+      font-size: 2rem; /* Relative unit for better scaling */
       color: #ffffff;
     }
 
     .container {
       background: rgba(255, 255, 255, 0.05);
       border-radius: 16px;
-      padding: 30px;
+      padding: 20px; /* Reduced padding */
       width: 100%;
-      max-width: 600px;
+      max-width: 600px; /* Still works for larger screens */
       backdrop-filter: blur(10px);
       box-shadow: 0 0 20px rgba(0,0,0,0.3);
+      overflow-y: auto; /* Allow scrolling if content overflows */
     }
 
     input {
       width: 100%;
-      padding: 12px;
+      padding: 10px; /* Adjusted for mobile */
       border: none;
       border-radius: 8px;
       margin-bottom: 15px;
-      font-size: 16px;
+      font-size: 1rem; /* Relative unit */
       background: #2e2e3e;
       color: white;
     }
 
     button {
       width: 100%;
-      padding: 12px;
+      padding: 10px; /* Adjusted for mobile */
       background: #5865F2;
       border: none;
       border-radius: 8px;
-      font-size: 16px;
+      font-size: 1rem; /* Relative unit */
       color: white;
       cursor: pointer;
       transition: 0.3s ease;
@@ -78,6 +81,29 @@
     #avatar {
       border-radius: 50%;
       margin-top: 10px;
+      max-width: 100%; /* Ensure avatar doesn't overflow */
+      height: auto;
+    }
+
+    /* Media query for mobile devices */
+    @media (max-width: 768px) {
+      body {
+        padding: 10px; /* Further reduce padding for smaller screens */
+      }
+
+      h1 {
+        font-size: 1.5rem; /* Smaller font for mobile */
+      }
+
+      .container {
+        padding: 15px;
+        max-width: 100%; /* Take full width on mobile */
+      }
+
+      input, button {
+        font-size: 0.9rem; /* Slightly smaller font for mobile */
+        padding: 8px; /* Adjusted padding */
+      }
     }
   </style>
 </head>
