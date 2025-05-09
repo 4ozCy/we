@@ -8,6 +8,7 @@
     {
       "src": "index.html",
       "src": "gyi.httml",
+      "src": "userinfo.html",
       "use": "@vercel/static"
     }
   ],
