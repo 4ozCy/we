@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Discord User Info</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: linear-gradient(135deg, #1e1e2f, #0f0f1f);
+      color: #e0e0e0;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      padding: 40px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      margin-bottom: 20px;
+      font-size: 32px;
+      color: #ffffff;
+    }
+
+    .container {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 30px;
+      width: 100%;
+      max-width: 600px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 20px rgba(0,0,0,0.3);
+    }
+
+    input {
+      width: 100%;
+      padding: 12px;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 15px;
+      font-size: 16px;
+      background: #2e2e3e;
+      color: white;
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #5865F2;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      color: white;
+      cursor: pointer;
+      transition: 0.3s ease;
+    }
+
+    button:hover {
+      background: #4752c4;
+    }
+
+    .field {
+      margin: 12px 0;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .label {
+      font-weight: 600;
+      margin-bottom: 5px;
+      color: #aaa;
+    }
+
+    #avatar {
+      border-radius: 50%;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Discord User Info Viewer</h1>
+  <div class="container">
+    <input type="text" id="token" placeholder="Paste your Discord token here">
+    <button onclick="fetchUser()">Fetch User Info</button>
+    <div id="result" style="margin-top: 20px;">
+      <div class="field"><span class="label">Username</span><span id="username"></span></div>
+      <div class="field"><span class="label">User ID</span><span id="id"></span></div>
+      <div class="field"><span class="label">Account Created</span><span id="createdAt"></span></div>
+      <div class="field"><span class="label">Email</span><span id="email"></span></div>
+      <div class="field"><span class="label">Phone</span><span id="phone"></span></div>
+      <div class="field"><span class="label">Nitro Status</span><span id="nitro"></span></div>
+      <div class="field"><span class="label">MFA Enabled</span><span id="mfa"></span></div>
+      <div class="field"><span class="label">Locale</span><span id="locale"></span></div>
+      <div class="field"><span class="label">Verified</span><span id="verified"></span></div>
+      <div class="field"><span class="label">Flags</span><span id="flags"></span></div>
+      <div class="field"><span class="label">Guild Count</span><span id="guilds"></span></div>
+      <div class="field"><span class="label">Friend Count</span><span id="friends"></span></div>
+      <div class="field"><span class="label">Avatar</span><img id="avatar" width="128" height="128" /></div>
+    </div>
+  </div>
+
+  <script>
+    function fetchUser() {
+      const token = document.getElementById('token').value;
+      fetch('/userinfo-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token })
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.error) return alert(data.error);
+        document.getElementById('username').textContent = data.username;
+        document.getElementById('id').textContent = data.id;
+        document.getElementById('createdAt').textContent = data.createdAt;
+        document.getElementById('email').textContent = data.email;
+        document.getElementById('phone').textContent = data.phone;
+        document.getElementById('nitro').textContent = data.nitro;
+        document.getElementById('mfa').textContent = data.mfaEnabled;
+        document.getElementById('locale').textContent = data.locale;
+        document.getElementById('verified').textContent = data.verified;
+        document.getElementById('flags').textContent = data.publicFlags.join(', ');
+        document.getElementById('guilds').textContent = data.guilds;
+        document.getElementById('friends').textContent = data.friends;
+        document.getElementById('avatar').src = data.avatar;
+      })
+      .catch(() => alert('Failed to fetch user info.'));
+    }
+  </script>
+</body>
+</html>
