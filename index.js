@@ -4,10 +4,13 @@ const path = require('path');
 const fs = require('fs');
 const bodyParser = require('body-parser');
 const Discord = require('discord.js-selfbot-v13');
+const favicon = require('serve-favicon');
 const app = express();
 const PORT = 8080;
 
 app.use(bodyParser.json());
+
+app.use(favicon(path.join(__dirname, 'celvyn.png')));
 
 async function text(url, res) {
   try {
