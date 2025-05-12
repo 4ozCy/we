@@ -9,6 +9,7 @@
       "src": "index.html",
       "src": "gyi.httml",
       "src": "userinfo.html",
+      "src": "celvyn.png",
       "use": "@vercel/static"
     }
   ],
