@@ -14,7 +14,7 @@ async function fetchAndProcessScript(url, scriptName, res) {
   try {
     const response = await fetch(url);
     const script = await response.text();
-    console.log(`[${scriptName}] Script fetched:`, script.slice(0, 100));
+    console.log(`[${scriptName}] Script fetched:`, script.slice(0, 0));
     res.send(`${scriptName} script fetched and processed on the server.`);
   } catch (err) {
     console.error(`Error fetching ${scriptName}:`, err.message);
@@ -34,7 +34,8 @@ function readAndProcessLocalFile(filePath, scriptName, res) {
   });
 }
 
-app.get('/', (req, res) => fetchAndProcessScript('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', 'Main', res));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/hub', (req, res) => fetchAndProcessScript('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', 'Main', res));
 app.get('/tf', (req, res) => fetchAndProcessScript('https://raw.githubusercontent.com/4ozCy/aa/refs/heads/main/touch%20f1ing-obfuscated.lua', 'TouchF1', res));
 app.get('/aimbot', (req, res) => fetchAndProcessScript('https://pastefy.app/3ChKbVJY/raw', 'Aimbot', res));
 app.get('/tpwalk', (req, res) => fetchAndProcessScript('https://pastebin.com/raw/i5c8a0tv', 'TPWalk', res));
