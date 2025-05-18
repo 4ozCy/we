@@ -8,7 +8,6 @@
     {
       "src": "index.html",
       "src": "gyi.httml",
-      "src": "script.html",
       "src": "celvyn.png",
       "use": "@vercel/static"
     }
