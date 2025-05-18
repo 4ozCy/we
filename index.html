@@ -4,23 +4,24 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Celvyn</title>
-    <link href="https://files.catbox.moe/qlqafm.png"
-        rel="shortcut icon" type="image/x-icon" />
-    <meta property="og:image"
-        content="https://cdn.discordapp.com/attachments/1187377061959045181/1373379353102127280/9043217b623fda4a55755e65ba043b81.jpg?ex=682a32b1&is=6828e131&hm=41dbed34e8a925ee7d47346177c9e0d3dde040d70e721eb5a342ffbbf909f5dd&" />
+    <link href="https://files.catbox.moe/qlqafm.png" rel="icon" type="image/png" />
+    <meta property="og:image" content="https://cdn.discordapp.com/attachments/1187377061959045181/1373379353102127280/9043217b623fda4a55755e65ba043b81.jpg?ex=682a32b1&is=6828e131&hm=41dbed34e8a925ee7d47346177c9e0d3dde040d70e721eb5a342ffbbf909f5dd&" />
     <meta property="og:url" content="https://celvyn.site" />
     <meta property="og:type" content="website" />
     <meta property="og:title" content="Celvyn Hub" />
     <meta property="og:description" content="The Simplest Script Free And Open Source." />
     <style>
-  <pre id="raw"></pre>
-  <script>
-    fetch(window.location.pathname)
-      .then(response => response.ok ? response.text() : Promise.reject('Failed to load'))
-      .then(data => { 
-        document.getElementById('raw').textContent = data;
-      })
-      .catch(error => document.getElementById('raw').textContent = `Error: ${error}`);
-  </script>
+    </style>
+</head>
+<body>
+    <pre id="raw"></pre>
+    <script>
+        fetch(window.location.pathname)
+            .then(response => response.ok ? response.text() : Promise.reject('Failed to load'))
+            .then(data => { 
+                document.getElementById('raw').textContent = data;
+            })
+            .catch(error => document.getElementById('raw').textContent = `Error: ${error}`);
+    </script>
 </body>
 </html>
