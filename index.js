@@ -5,7 +5,7 @@ const path = require('path');
 const fs = require('fs');
 const favicon = require('serve-favicon');
 const app = express();
-const PORT = 8080;
+const PORT = 3000;
 
 app.use(bodyParser.json());
 app.use(favicon(path.join(__dirname, 'celvyn.png')));
@@ -37,7 +37,7 @@ app.get('/tpwalk', (req, res) => text('https://pastebin.com/raw/i5c8a0tv', res))
 app.get('/esp', (req, res) => file(path.join(__dirname, 'esp.lua'), res));
 app.get('/ip', (req, res) => res.sendFile(path.join(__dirname, 'gyi.html')));
 
-app.listen(PORT, () => {
-console.log(Server is running on http://localhost:${PORT});
-});
-
+app.listen(PORT, function(err){
+    if (err) console.log("Error in server setup")
+    console.log("Server listening on Port", PORT);
+})
