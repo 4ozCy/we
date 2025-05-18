@@ -1,14 +1,12 @@
 const express = require('express');
 const fetch = require('node-fetch');
 const path = require('path');
-const bodyParser = require('body-parser')
 const fs = require('fs');
 const favicon = require('serve-favicon');
 const app = express();
 const PORT = 8080;
 
-app.use(bodyParser.json());
-
+app.use(express.json());
 app.use(favicon(path.join(__dirname, 'celvyn.png')));
 
 async function text(url, res) {
