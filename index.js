@@ -39,7 +39,7 @@ app.get('/ip', (req, res) => res.sendFile(path.join(__dirname, 'gyi.html')));
 
 app.get('/:image', (req, res) => {
   const imageName = req.params.image;
-  const imagePath = path.join(__dirname, 'celvyn.png', imageName);
+  const imagePath = path.join(__dirname, imageName);
 
   res.sendFile(imagePath, (err) => {
     if (err) {
