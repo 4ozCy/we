@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Celvyn</title>
+</head>
+<body>
+  <pre id="raw"></pre>
+  <script>
+    fetch(window.location.pathname)
+      .then(response => response.ok ? response.text() : Promise.reject('Failed to load'))
+      .then(data => { 
+        document.getElementById('raw').textContent = data;
+      })
+      .catch(error => document.getElementById('raw').textContent = `Error: ${error}`);
+  </script>
+</body>
+</html>
