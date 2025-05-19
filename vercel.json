@@ -8,6 +8,9 @@
     { "src": "*.jpeg", "use": "@vercel/static" }
   ],
   "routes": [
+    { "src": "/([^/]+)\\.html", "dest": "/$1.html" },
+    { "src": "/([^/]+)\\.png", "dest": "/$1.png" },
+    { "src": "/([^/]+)\\.jpg", "dest": "/$1.jpg" },
     { "src": "/.*", "dest": "/index.js" }
   ]
 }
