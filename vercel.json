@@ -7,8 +7,11 @@
     },
     {
   "routes": [
-    { "src": "/[^/]+\\.html", "use": "@vercel/static" },
-    { "src": "/[^/]+\\.(png|jpg|jpeg|gif|webp|svg|mp4|mp3)", "use": "@vercel/static" }
+    { 
+     "src": "/[^/]+\\.html",
+     "src": "/[^/]+\\.png", 
+     "use": "@vercel/static" 
+    }
   ]
     }
   ],
