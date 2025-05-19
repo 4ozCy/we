@@ -6,10 +6,9 @@
       "use": "@vercel/node"
     },
     {
-      "src": "index.html",
-      "src": "s.html",
-      "src": "gyi.httml",
-      "src": "celvyn.png",
+      "src": "/(.*).html",
+      "src": "/(.*).png",
+      "src": "/(.*).jpg",
       "use": "@vercel/static"
     }
   ],
