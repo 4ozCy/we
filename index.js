@@ -30,7 +30,8 @@ res.type('text/plain').send(data);
 });
 }
 
-app.get('/', (req, res) => text('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', res));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/hub', (req, res) => text('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', res));
 app.get('/tf', (req, res) => text('https://raw.githubusercontent.com/4ozCy/aa/refs/heads/main/touch%20f1ing-obfuscated.lua', res));
 app.get('/aimbot', (req, res) => text('https://pastefy.app/3ChKbVJY/raw', res));
 app.get('/tpwalk', (req, res) => text('https://pastebin.com/raw/i5c8a0tv', res));
