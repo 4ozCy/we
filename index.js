@@ -38,17 +38,17 @@ app.get('/tpwalk', (req, res) => text('https://pastebin.com/raw/i5c8a0tv', res))
 app.get('/esp', (req, res) => file(path.join(__dirname, 'esp.lua'), res));
 app.get('/ip', (req, res) => res.sendFile(path.join(__dirname, 'gyi.html')));
 
-app.get('/:image', (req, res) => {
-  const imageName = req.params.image;
-  const imagePath = path.join(__dirname, imageName);
+app.get('/:file', (req, res) => {
+  const fileName = req.params.file;
+  const filePath = path.join(__dirname, fileName);
 
-  res.sendFile(imagePath, (err) => {
+  res.sendFile(filePath, (err) => {
     if (err) {
-      res.status(404).send('Image not found');
+      res.status(404).send('File not found');
     }
   });
 });
-
+  
 app.listen(PORT, function(err){
     if (err) console.log("Error in server setup")
     console.log("Server listening on Port", PORT);
