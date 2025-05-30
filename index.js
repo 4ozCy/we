@@ -60,7 +60,7 @@ app.get('/ip', (req, res) => {
 });
 
 app.get('/oraraka-premium', (req, res) => {
-  res.sendFile(path.join(__dirname, 'Oraraka-premium.js'));
+  res.sendFile(path.join(__dirname, 'Oraraka-Premium.js'));
 });
 
 app.get('/:file', (req, res) => {
