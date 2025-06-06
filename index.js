@@ -55,17 +55,12 @@ app.get('/esp', (req, res) => {
   file(path.join(__dirname, 'esp.lua'), res);
 });
 
-app.get('/ip', (req, res) => {
-  res.sendFile(path.join(__dirname, 'gyi.html'));
+app.get('/tp', (req, res) => {
+  file(path.join(__dirname, 'tp.lua'), res);
 });
 
-app.get('/oraraka-premium.js', (req, res) => {
-  const filePath = path.join(__dirname, 'Oraraka-Premium.js');
-  res.type('application/javascript').sendFile(filePath, (err) => {
-    if (err) {
-      res.status(500).send('Failed to load Oraraka-premium.js');
-    }
-  });
+app.get('/ip', (req, res) => {
+  res.sendFile(path.join(__dirname, 'gyi.html'));
 });
 
 app.get('/:file', (req, res) => {
@@ -74,7 +69,7 @@ app.get('/:file', (req, res) => {
 
   res.sendFile(filePath, (err) => {
     if (err) {
-      res.status(404).send('File not found');
+      res.status(404).send('404 not found');
     }
   });
 });
