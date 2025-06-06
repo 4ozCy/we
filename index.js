@@ -63,13 +63,16 @@ app.get('/ip', (req, res) => {
   res.sendFile(path.join(__dirname, 'gyi.html'));
 });
 
+const path = require('path');
+
 app.get('/:file', (req, res) => {
   const fileName = req.params.file;
   const filePath = path.join(__dirname, fileName);
 
   res.sendFile(filePath, (err) => {
     if (err) {
-      res.status(404).send('404 not found');
+      const notFoundPath = path.join(__dirname, '404.html');
+      res.status(404).sendFile(notFoundPath);
     }
   });
 });
