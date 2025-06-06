@@ -63,8 +63,6 @@ app.get('/ip', (req, res) => {
   res.sendFile(path.join(__dirname, 'gyi.html'));
 });
 
-const path = require('path');
-
 app.get('/:file', (req, res) => {
   const fileName = req.params.file;
   const filePath = path.join(__dirname, fileName);
