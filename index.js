@@ -4,7 +4,6 @@ const bodyParser = require('body-parser');
 const path = require('path');
 const fs = require('fs');
 const favicon = require('serve-favicon');
-
 const app = express();
 const PORT = 3000;
 
@@ -36,7 +35,7 @@ app.get('/', (req, res) => {
 });
 
 app.get('/hub', (req, res) => {
-  text('https://raw.githubusercontent.com/4ozCy/Celvyn/refs/heads/main/Main.lua', res);
+  file(path.join(__dirname, 'main.lua'), res);
 });
 
 app.get('/tf', (req, res) => {
