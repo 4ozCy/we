@@ -43,8 +43,9 @@ app.get('/tf', (req, res) => {
 });
 
 app.get('/aimbot', (req, res) => {
-  text('https://pastefy.app/3ChKbVJY/raw', res);
+  file(path.join(__dirname, 'aimbot.lua'), res);
 });
+
 
 app.get('/tpwalk', (req, res) => {
   text('https://pastebin.com/raw/i5c8a0tv', res);
