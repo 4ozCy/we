@@ -12,7 +12,7 @@ Rayfield:Notify({
 })
 
 local Window = Rayfield:CreateWindow({
-   Name = "Celvyn | Beta",
+   Name = "Dig",
    Icon = 119663846201777,
    LoadingTitle = "Celvyn",
    LoadingSubtitle = "by @.03cc",
@@ -48,7 +48,7 @@ local Dropdown = Tab:CreateDropdown({
     end,
 })
 
-local Butto= Tab:CreateButton({
+local Button = Tab:CreateButton({
     Name = "Teleport",
     Callback = function()
         local pos
