@@ -71,6 +71,9 @@ local LocalPlayer = Players.LocalPlayer
 local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
 
 local autoHitEnabled = false
+local connection = nil
+local lastHitTime = 0
+local hitCooldown = 0.25
 
 local Toggle = Tab:CreateToggle({
 	Name = "Auto Dig",
@@ -78,37 +81,43 @@ local Toggle = Tab:CreateToggle({
 	Callback = function(Value)
 		autoHitEnabled = Value
 
-		if Value then
-			task.spawn(function()
-				while autoHitEnabled do
-					local digUI = PlayerGui:FindFirstChild("Dig")
-					if not digUI then task.wait(0.1) continue end
+		if autoHitEnabled then
+			connection = RunService.Heartbeat:Connect(function()
+				local currentTime = tick()
+				if currentTime - lastHitTime < hitCooldown then return end
 
-					local safezone = digUI:FindFirstChild("Safezone")
-					if not safezone then task.wait(0.1) continue end
+				local digUI = PlayerGui:FindFirstChild("Dig")
+				if not digUI then return end
 
-					local holder = safezone:FindFirstChild("Holder")
-					if not holder then task.wait(0.1) continue end
+				local safezone = digUI:FindFirstChild("Safezone")
+				if not safezone then return end
 
-					local playerBar = holder:FindFirstChild("PlayerBar")
-					local areaStrong = holder:FindFirstChild("Area_Strong")
-					if not playerBar or not areaStrong then task.wait(0.1) continue end
-					if not areaStrong.Visible or areaStrong.AbsoluteSize.X < 2 then task.wait(0.1) continue end
+				local holder = safezone:FindFirstChild("Holder")
+				if not holder then return end
 
-					local playerPos = playerBar.Position.X.Scale
-					local strongLeft = areaStrong.Position.X.Scale
-					local strongRight = strongLeft + areaStrong.Size.X.Scale
+				local playerBar = holder:FindFirstChild("PlayerBar")
+				local areaStrong = holder:FindFirstChild("Area_Strong")
+				if not playerBar or not areaStrong then return end
+				if not areaStrong.Visible or areaStrong.AbsoluteSize.X < 2 then return end
 
-					if playerPos >= strongLeft and playerPos <= strongRight then
-						VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
-						task.wait(0.01)
-						VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
-						task.wait(0.2)
-					else
-						task.wait(0.05)
-					end
+				local playerPos = playerBar.Position.X.Scale
+				local strongLeft = areaStrong.Position.X.Scale
+				local strongRight = strongLeft + areaStrong.Size.X.Scale
+				local strongCenter = strongLeft + (areaStrong.Size.X.Scale / 2)
+				local tolerance = 0.0025
+
+				if playerPos >= strongLeft - tolerance and playerPos <= strongRight + tolerance then
+					lastHitTime = currentTime
+					VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+					task.wait(0.01)
+					VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
 				end
 			end)
+		else
+			if connection then
+				connection:Disconnect()
+				connection = nil
+			end
 		end
 	end,
 })
