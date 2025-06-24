@@ -42,11 +42,10 @@ local Dropdown = Tab:CreateDropdown({
     Options = {"Monk Palace", "Azure Hollow"},
     CurrentOption = {"Monk Palace"},
     MultipleOptions = false,
-    Flag = "TeleportDropdown",
     Callback = function(Options)
         selectedOption = Options[1]
     end,
-})
+});
 
 local Button = Tab:CreateButton({
     Name = "Teleport",
