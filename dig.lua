@@ -119,7 +119,7 @@ local selectedOption = "Monk Palace"
 
 local Dropdown = Tab:CreateDropdown({
     Name = "Select Teleport Location",
-    Options = {"Monk Palace", "Azure Hollow"},
+    Options = {"Monk Palace", "Azure Hollow", "Fox Town", "Cinder Shore"},
     CurrentOption = {"Monk Palace"},
     MultipleOptions = false,
     Callback = function(Options)
@@ -135,6 +135,10 @@ local Button = Tab:CreateButton({
             pos = Vector3.new(4545.35, -360.04, -1626.06)
         elseif selectedOption == "Azure Hollow" then
             pos = Vector3.new(4130.15, -672.86, 2552.10)
+	elseif selectedOption == "Fox Town" then
+	    pos = Vector3.new(2023.90, 112.05, -352.77)
+	elseif selectedOption == "Cinder Shore" then
+	   pos = Vector3.new(1326.38, 77.83, 510.03)
         end
 
         if pos then
