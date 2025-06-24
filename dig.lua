@@ -1,6 +1,6 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/ADSKerOffical/AntiCheat/main/Bypass"))()
 
-task.wait(1)
+task.wait(0.8)
 
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Pixeluted/adoniscries/main/Source.lua", true))()
 
@@ -52,9 +52,9 @@ local CustomTheme = {
 local Window = Rayfield:CreateWindow({
    Name = "Dig | Alpha",
    Icon = 119663846201777,
-   LoadingTitle = "Celvyn",
-   LoadingSubtitle = "loading...",
-   ShowText = "Celvyn",
+   LoadingTitle = "loading...",
+   LoadingSubtitle = "AHHHHHHHHH",
+   ShowText = "Menu",
    ToggleUIKeybind = "R",
    Theme = CustomTheme
 })
@@ -63,13 +63,21 @@ local Tab = Window:CreateTab("Main", "box")
 
 local Section = Tab:CreateSection("Main Section")
 
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local VIM = game:GetService("VirtualInputManager")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+
 local autoHitEnabled = false
 
 local Toggle = Tab:CreateToggle({
-	Name = "auto dig",
+	Name = "Auto Dig",
 	CurrentValue = false,
 	Callback = function(Value)
 		autoHitEnabled = Value
+
 		if Value then
 			task.spawn(function()
 				while autoHitEnabled do
@@ -84,17 +92,14 @@ local Toggle = Tab:CreateToggle({
 
 					local playerBar = holder:FindFirstChild("PlayerBar")
 					local areaStrong = holder:FindFirstChild("Area_Strong")
-
 					if not playerBar or not areaStrong then task.wait(0.1) continue end
 					if not areaStrong.Visible or areaStrong.AbsoluteSize.X < 2 then task.wait(0.1) continue end
 
 					local playerPos = playerBar.Position.X.Scale
 					local strongLeft = areaStrong.Position.X.Scale
 					local strongRight = strongLeft + areaStrong.Size.X.Scale
-					local strongCenter = strongLeft + (areaStrong.Size.X.Scale / 2)
 
 					if playerPos >= strongLeft and playerPos <= strongRight then
-						local VIM = game:GetService("VirtualInputManager")
 						VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
 						task.wait(0.01)
 						VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
