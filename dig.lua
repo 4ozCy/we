@@ -46,10 +46,10 @@ local CustomTheme = {
 }
 
 local Window = Rayfield:CreateWindow({
-   Name = "Dig",
+   Name = "Dig | Alpha",
    Icon = 119663846201777,
    LoadingTitle = "Celvyn",
-   LoadingSubtitle = "by @.03cc",
+   LoadingSubtitle = "loading...",
    ShowText = "Celvyn",
    ToggleUIKeybind = "R",
    Theme = CustomTheme
@@ -58,6 +58,51 @@ local Window = Rayfield:CreateWindow({
 local Tab = Window:CreateTab("Main", "box")
 
 local Section = Tab:CreateSection("Main Section")
+
+local autoHitEnabled = false
+
+local Toggle = Tab:CreateToggle({
+	Name = "auto dig",
+	CurrentValue = false,
+	Callback = function(Value)
+		autoHitEnabled = Value
+		if Value then
+			task.spawn(function()
+				while autoHitEnabled do
+					local digUI = PlayerGui:FindFirstChild("Dig")
+					if not digUI then task.wait(0.1) continue end
+
+					local safezone = digUI:FindFirstChild("Safezone")
+					if not safezone then task.wait(0.1) continue end
+
+					local holder = safezone:FindFirstChild("Holder")
+					if not holder then task.wait(0.1) continue end
+
+					local playerBar = holder:FindFirstChild("PlayerBar")
+					local areaStrong = holder:FindFirstChild("Area_Strong")
+
+					if not playerBar or not areaStrong then task.wait(0.1) continue end
+					if not areaStrong.Visible or areaStrong.AbsoluteSize.X < 2 then task.wait(0.1) continue end
+
+					local playerPos = playerBar.Position.X.Scale
+					local strongLeft = areaStrong.Position.X.Scale
+					local strongRight = strongLeft + areaStrong.Size.X.Scale
+					local strongCenter = strongLeft + (areaStrong.Size.X.Scale / 2)
+
+					if playerPos >= strongLeft and playerPos <= strongRight then
+						local VIM = game:GetService("VirtualInputManager")
+						VIM:SendKeyEvent(true, Enum.KeyCode.Space, false, game)
+						task.wait(0.01)
+						VIM:SendKeyEvent(false, Enum.KeyCode.Space, false, game)
+						task.wait(0.2)
+					else
+						task.wait(0.05)
+					end
+				end
+			end)
+		end
+	end,
+})
 
 local Divider = Tab:CreateDivider()
 
@@ -71,7 +116,7 @@ local Dropdown = Tab:CreateDropdown({
     Callback = function(Options)
         selectedOption = Options[1]
     end,
-});
+})
 
 local Button = Tab:CreateButton({
     Name = "Teleport",
@@ -90,7 +135,7 @@ local Button = Tab:CreateButton({
             end
         end
     end,
-});
+})
 
 local Divider = Tab:CreateDivider()
 
@@ -101,4 +146,4 @@ local args = {
 workspace:WaitForChild("World"):WaitForChild("NPCs"):WaitForChild("Rocky")}
 game:GetService("ReplicatedStorage"):WaitForChild("DialogueRemotes"):WaitForChild("SellAllItems"):FireServer(unpack(args))
 end,
-});
+})
