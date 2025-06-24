@@ -448,9 +448,9 @@ local Slider = pTab:CreateSlider({
 
 local cTab = Window:CreateTab("Combat", "swords")
 
-local Divider = cTab:CreateDivider()
+local Section = cTab:CreateSection("Combat Section")
 
-local Section = cTab:CreateSection("Aimbot Section")
+local Divider = cTab:CreateDivider()
 
 local Button = cTab:CreateButton({
     Name = "Celvyn Aimbot",
@@ -666,7 +666,7 @@ local Toggle = mTab:CreateToggle({
     end,
 })
 
-local Divider = pTab:CreateDivider()
+local Divider = mTab:CreateDivider()
 
 local Input = mTab:CreateInput({
     Name = "Volume",
