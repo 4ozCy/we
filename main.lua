@@ -735,7 +735,7 @@ end
 
 ExecutorLabel:Set("Executor: " .. getExecutorName())
 
-local FPSLabel = sgTab:CreateLabel("fps: 0", "chart-no-axes-column-increasing")
+local FPSLabel = sgTab:CreateLabel("fps: 0", "cpu")
 
 local frameCount = 0
 local lastTime = tick()
