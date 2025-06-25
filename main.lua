@@ -98,6 +98,16 @@ game:GetService("RunService").RenderStepped:Connect(function()
 	end
 end)
 
+local GameNameLabel = dTab:CreateLabel("Game: Loading...")
+local GameIdLabel = dTab:CreateLabel("Game ID: " .. game.PlaceId)
+
+pcall(function()
+	local info = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
+	if info and info.Name then
+		GameNameLabel:Set("Game: " .. info.Name)
+	end
+end)
+
 local PingLabel = dTab:CreateLabel("Ping: 0ms", "wifi")
 
 task.spawn(function()
@@ -146,6 +156,8 @@ end)
 local Tab = Window:CreateTab("Main", "box")
 
 local Section = Tab:CreateSection("Main Section")
+
+local Divider = Tab:CreateDivider()
 
 local noclip = false
 local function enableNoclip()
