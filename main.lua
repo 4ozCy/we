@@ -98,8 +98,20 @@ game:GetService("RunService").RenderStepped:Connect(function()
 	end
 end)
 
-local GameNameLabel = dTab:CreateLabel("Game: Loading...")
-local GameIdLabel = dTab:CreateLabel("Game ID: " .. game.PlaceId)
+local RegionLabel = dTab:CreateLabel("Region: Detecting...", "globe")
+
+local success, result = pcall(function()
+	return game:GetService("LocalizationService"):GetCountryRegionForPlayerAsync(game.Players.LocalPlayer)
+end)
+
+if success and result then
+	RegionLabel:Set("Region: " .. result)
+else
+	RegionLabel:Set("Region: Unknown")
+end
+
+local GameNameLabel = dTab:CreateLabel("Game: Loading...", "gamepad-2")
+local GameIdLabel = dTab:CreateLabel("Game ID: " .. game.PlaceId, "gamepad-2")
 
 pcall(function()
 	local info = game:GetService("MarketplaceService"):GetProductInfo(game.PlaceId)
