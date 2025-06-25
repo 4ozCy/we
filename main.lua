@@ -62,6 +62,87 @@ local Window = Rayfield:CreateWindow({
    Theme = t
 })
 
+local dTab = Window:CreateTab("Dashboard", "layout-dashboard")
+
+local Section = dTab:CreateSection("Dashboard Section")
+
+local Divider = dTab:CreateDivider()
+
+local ExecutorLabel = dTab:CreateLabel("Executor: Detecting...", "terminal")
+
+local function getExecutorName()
+    if identifyexecutor then
+        local name = identifyexecutor()
+        if name and name ~= "" then
+            return name
+        end
+    end
+    return "Unknown"
+end
+
+ExecutorLabel:Set("Executor: " .. getExecutorName())
+
+local FPSLabel = dTab:CreateLabel("fps: 0", "cpu")
+
+local frameCount = 0
+local lastTime = tick()
+
+game:GetService("RunService").RenderStepped:Connect(function()
+	frameCount += 1
+	local currentTime = tick()
+	if currentTime - lastTime >= 1 then
+		local fps = frameCount / (currentTime - lastTime)
+		FPSLabel:Set(string.format("FPS: %.2f", fps))
+		frameCount = 0
+		lastTime = currentTime
+	end
+end)
+
+local PingLabel = dTab:CreateLabel("Ping: 0ms", "wifi")
+
+task.spawn(function()
+	local Stats = game:GetService("Stats")
+	local NetStats = Stats:FindFirstChild("Network")
+
+	while not NetStats do
+		NetStats = Stats:FindFirstChild("Network")
+		task.wait(0.1)
+	end
+
+	while true do
+		local ping = math.floor(NetStats.ServerStatsItem["Data Ping"]:GetValue())
+		PingLabel:Set("Ping: " .. ping .. "ms")
+		task.wait(0.1)
+	end
+end)
+
+local PlayerCountLabel = dTab:CreateLabel("Players: 0", "user")
+
+task.spawn(function()
+	while true do
+		local count = #game.Players:GetPlayers()
+		PlayerCountLabel:Set("Players: " .. count)
+		task.wait(2)
+	end
+end)
+
+local UptimeLabel = dTab:CreateLabel("Uptime: 00:00:00", "clock")
+
+local startTime = tick()
+
+task.spawn(function()
+	while true do
+		local elapsed = tick() - startTime
+		local hours = math.floor(elapsed / 3600)
+		local minutes = math.floor((elapsed % 3600) / 60)
+		local seconds = math.floor(elapsed % 60)
+
+		local formatted = string.format("Uptime: %02d:%02d:%02d", hours, minutes, seconds)
+		UptimeLabel:Set(formatted)
+		task.wait(1)
+	end
+end)
+
 local Tab = Window:CreateTab("Main", "box")
 
 local Section = Tab:CreateSection("Main Section")
@@ -712,95 +793,5 @@ local Button = mTab:CreateButton({
             Sound:Stop()
             playRandomMusic()
         end
-    end,
-})
-
-local sgTab = Window:CreateTab("Setting", "settings")
-
-local Section = sgTab:CreateSection("Setting Section")
-
-local Divider = sgTab:CreateDivider()
-
-local ExecutorLabel = sgTab:CreateLabel("Executor: Detecting...", "terminal")
-
-local function getExecutorName()
-    if identifyexecutor then
-        local name = identifyexecutor()
-        if name and name ~= "" then
-            return name
-        end
-    end
-    return "Unknown"
-end
-
-ExecutorLabel:Set("Executor: " .. getExecutorName())
-
-local FPSLabel = sgTab:CreateLabel("fps: 0", "cpu")
-
-local frameCount = 0
-local lastTime = tick()
-
-game:GetService("RunService").RenderStepped:Connect(function()
-	frameCount += 1
-	local currentTime = tick()
-	if currentTime - lastTime >= 1 then
-		local fps = frameCount / (currentTime - lastTime)
-		FPSLabel:Set(string.format("FPS: %.2f", fps))
-		frameCount = 0
-		lastTime = currentTime
-	end
-end)
-
-local PingLabel = sgTab:CreateLabel("Ping: 0ms", "wifi")
-
-task.spawn(function()
-	local Stats = game:GetService("Stats")
-	local NetStats = Stats:FindFirstChild("Network")
-
-	while not NetStats do
-		NetStats = Stats:FindFirstChild("Network")
-		task.wait(0.1)
-	end
-
-	while true do
-		local ping = math.floor(NetStats.ServerStatsItem["Data Ping"]:GetValue())
-		PingLabel:Set("Ping: " .. ping .. "ms")
-		task.wait(0.1)
-	end
-end)
-
-local PlayerCountLabel = sgTab:CreateLabel("Players: 0", "user")
-
-task.spawn(function()
-	while true do
-		local count = #game.Players:GetPlayers()
-		PlayerCountLabel:Set("Players: " .. count)
-		task.wait(2)
-	end
-end)
-
-local UptimeLabel = sgTab:CreateLabel("Uptime: 00:00:00", "clock")
-
-local startTime = tick()
-
-task.spawn(function()
-	while true do
-		local elapsed = tick() - startTime
-		local hours = math.floor(elapsed / 3600)
-		local minutes = math.floor((elapsed % 3600) / 60)
-		local seconds = math.floor(elapsed % 60)
-
-		local formatted = string.format("Uptime: %02d:%02d:%02d", hours, minutes, seconds)
-		UptimeLabel:Set(formatted)
-		task.wait(1)
-	end
-end)
-
-local Divider = sgTab:CreateDivider()
-
-local Button = sgTab:CreateButton({
-    Name = "Destroy Ui",
-    Callback = function()
-        Rayfield:Destroy()
     end,
 })
