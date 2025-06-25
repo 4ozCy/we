@@ -819,3 +819,44 @@ local Button = mTab:CreateButton({
         end
     end,
 })
+
+local tTab = Window:CreateTab("Test")
+
+local HttpService = game:GetService("HttpService")
+
+local PickupLabel = tTab:CreateLabel("Pickup Line: Loading...")
+
+local url = "https://vinuxd.vercel.app/api/pickup"
+
+local function fetchPickupLine()
+	local response
+
+	if http_request then
+		response = http_request({Url = url, Method = "GET"})
+	elseif syn and syn.request then
+		response = syn.request({Url = url, Method = "GET"})
+	elseif request then
+		response = request({Url = url, Method = "GET"})
+	else
+		return "Executor doesn't support HTTP requests"
+	end
+
+	if response and response.Body then
+		local ok, data = pcall(function()
+			return HttpService:JSONDecode(response.Body)
+		end)
+		if ok and data and data.pickup then
+			return data.pickup
+		end
+	end
+
+	return "Failed to fetch pickup line"
+end
+
+task.spawn(function()
+	while true do
+		local line = fetchPickupLine()
+		PickupLabel:Set("Pickup Line: " .. line)
+		task.wait(5)
+	end
+end)
