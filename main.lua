@@ -57,7 +57,8 @@ local Window = Rayfield:CreateWindow({
    Name = "Celvyn | Beta",
    Icon = 119663846201777,
    LoadingTitle = "loading...",
-   LoadingSubtitle = "idk what to put here",
+   LoadingSubtitle = nil,
+   ShowText = "Menu",
    Theme = t
 })
 
@@ -466,6 +467,8 @@ local Button = cTab:CreateButton({
     end,
 })
 
+local Divider = cTab:CreateDivider()
+
 local Button = cTab:CreateButton({
     Name = "Arrow esp",
     Callback = function()
@@ -716,7 +719,19 @@ local sgTab = Window:CreateTab("Setting", "settings")
 
 local Section = sgTab:CreateSection("Setting Section")
 
-local Divider = sTab:CreateDivider()
+local Divider = sgTab:CreateDivider()
+
+local Label = sgTab:CreateLabel("FPS: 0", "cpu")
+
+task.spawn(function()
+	while true do
+		local fps = math.floor(1 / game:GetService("RunService").RenderStepped:Wait())
+		Label:Set("FPS: " .. fps)
+		task.wait(0.2)
+	end
+end)
+
+local Divider = sgTab:CreateDivider()
 
 local Button = sgTab:CreateButton({
     Name = "Destroy Ui",
