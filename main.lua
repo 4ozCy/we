@@ -61,18 +61,18 @@ local Window = Rayfield:CreateWindow({
     Theme = t
 })
 
-task.delay(1, function()
-    local gui = game:GetService("CoreGui"):FindFirstChild("Rayfield")
-    if not gui then return end
-
-    for _, obj in ipairs(gui:GetDescendants()) do
-        if obj:IsA("TextLabel") and string.find(obj.Text, "Celvyn") then
-            obj.RichText = true
-            obj.Text = '<font color="#FFA500">Celvyn</font> <font color="#90EE90">| Beta</font>'
-            break
-        end
+local gui = game:GetService("CoreGui"):FindFirstChild("Rayfield")
+if gui then
+    local label = gui:FindFirstChildWhichIsA("TextLabel", true)
+    if label then
+        label.RichText = true
+        label.Text = '<font color="#FFA500">Celvyn</font> <font color="#90EE90">| Beta</font>'
+    else
+        warn("❌ Couldn't find the title label")
     end
-end)
+else
+    warn("❌ Rayfield GUI not found")
+end
 
 local dTab = Window:CreateTab("Dashboard", "layout-dashboard")
 
