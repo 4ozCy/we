@@ -1,49 +1,49 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Pixeluted/adoniscries/main/Source.lua", true))() -- Adonis Bypass
 
-task.wait(1.5)
+task.wait(1)
 
 local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source.lua'))()
 
 local t = {
-    TextColor = Color3.fromRGB(200, 200, 200),
+    TextColor = Color3.fromRGB(220, 220, 220),
 
-    Background = Color3.fromRGB(5, 5, 5),
-    Topbar = Color3.fromRGB(8, 8, 8),
+    Background = Color3.fromRGB(3, 3, 3),
+    Topbar = Color3.fromRGB(6, 6, 6),
     Shadow = Color3.fromRGB(0, 0, 0),
 
-    NotificationBackground = Color3.fromRGB(10, 10, 10),
-    NotificationActionsBackground = Color3.fromRGB(120, 120, 120),
+    NotificationBackground = Color3.fromRGB(12, 12, 12),
+    NotificationActionsBackground = Color3.fromRGB(100, 100, 100),
 
-    TabBackground = Color3.fromRGB(15, 15, 15),
-    TabStroke = Color3.fromRGB(20, 20, 20),
-    TabBackgroundSelected = Color3.fromRGB(30, 30, 30),
+    TabBackground = Color3.fromRGB(10, 10, 10),
+    TabStroke = Color3.fromRGB(18, 18, 18),
+    TabBackgroundSelected = Color3.fromRGB(25, 25, 25),
     TabTextColor = Color3.fromRGB(180, 180, 180),
-    SelectedTabTextColor = Color3.fromRGB(240, 240, 240),
+    SelectedTabTextColor = Color3.fromRGB(255, 255, 255),
 
-    ElementBackground = Color3.fromRGB(10, 10, 10),
-    ElementBackgroundHover = Color3.fromRGB(15, 15, 15),
-    SecondaryElementBackground = Color3.fromRGB(5, 5, 5),
-    ElementStroke = Color3.fromRGB(25, 25, 25),
-    SecondaryElementStroke = Color3.fromRGB(20, 20, 20),
+    ElementBackground = Color3.fromRGB(8, 8, 8),
+    ElementBackgroundHover = Color3.fromRGB(16, 16, 16),
+    SecondaryElementBackground = Color3.fromRGB(4, 4, 4),
+    ElementStroke = Color3.fromRGB(20, 20, 20),
+    SecondaryElementStroke = Color3.fromRGB(15, 15, 15),
 
-    SliderBackground = Color3.fromRGB(30, 100, 170),
-    SliderProgress = Color3.fromRGB(30, 100, 170),
-    SliderStroke = Color3.fromRGB(50, 150, 230),
+    SliderBackground = Color3.fromRGB(40, 120, 190),
+    SliderProgress = Color3.fromRGB(60, 150, 230),
+    SliderStroke = Color3.fromRGB(80, 180, 255),
 
-    ToggleBackground = Color3.fromRGB(10, 10, 10),
-    ToggleEnabled = Color3.fromRGB(0, 100, 160),
-    ToggleDisabled = Color3.fromRGB(60, 60, 60),
-    ToggleEnabledStroke = Color3.fromRGB(0, 130, 210),
-    ToggleDisabledStroke = Color3.fromRGB(90, 90, 90),
-    ToggleEnabledOuterStroke = Color3.fromRGB(70, 70, 70),
-    ToggleDisabledOuterStroke = Color3.fromRGB(40, 40, 40),
+    ToggleBackground = Color3.fromRGB(8, 8, 8),
+    ToggleEnabled = Color3.fromRGB(0, 120, 200),
+    ToggleDisabled = Color3.fromRGB(50, 50, 50),
+    ToggleEnabledStroke = Color3.fromRGB(0, 150, 240),
+    ToggleDisabledStroke = Color3.fromRGB(80, 80, 80),
+    ToggleEnabledOuterStroke = Color3.fromRGB(60, 60, 60),
+    ToggleDisabledOuterStroke = Color3.fromRGB(35, 35, 35),
 
-    DropdownSelected = Color3.fromRGB(15, 15, 15),
+    DropdownSelected = Color3.fromRGB(18, 18, 18),
     DropdownUnselected = Color3.fromRGB(10, 10, 10),
 
-    InputBackground = Color3.fromRGB(10, 10, 10),
-    InputStroke = Color3.fromRGB(30, 30, 30),
-    PlaceholderColor = Color3.fromRGB(120, 120, 120)
+    InputBackground = Color3.fromRGB(12, 12, 12),
+    InputStroke = Color3.fromRGB(25, 25, 25),
+    PlaceholderColor = Color3.fromRGB(140, 140, 140)
 }
 
 Rayfield:Notify({
@@ -60,26 +60,6 @@ local Window = Rayfield:CreateWindow({
     ShowText = "Menu",
     Theme = t
 })
-
-task.spawn(function()
-    local CoreGui = game:GetService("CoreGui")
-    local gui = nil
-
-    while not gui do
-        gui = CoreGui:FindFirstChild("Rayfield")
-        task.wait()
-    end
-
-    task.wait(0.5)
-
-    for _, v in ipairs(gui:GetDescendants()) do
-        if v:IsA("TextLabel") and v.Text == "Celvyn | Beta" then
-            v.RichText = true
-            v.Text = '<font color="#FFA500">Celvyn</font> <font color="#90EE90">| Beta</font>'
-            break
-        end
-    end
-end)
 
 local dTab = Window:CreateTab("Dashboard", "layout-dashboard")
 
