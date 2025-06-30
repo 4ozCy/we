@@ -1,6 +1,6 @@
 loadstring(game:HttpGet("https://raw.githubusercontent.com/Pixeluted/adoniscries/main/Source.lua", true))() -- Adonis Bypass
 
-task.wait(0.6)
+task.wait(1.5)
 
 local Rayfield = loadstring(game:HttpGet('https://raw.githubusercontent.com/SiriusSoftwareLtd/Rayfield/main/source.lua'))()
 
@@ -54,7 +54,7 @@ Rayfield:Notify({
 })
 
 local Window = Rayfield:CreateWindow({
-   Name = "Celvyn | Beta",
+   Name = '<font color="#FFA500">Celvyn</font> <font color="#90EE90">| Beta</font>',
    Icon = 119663846201777,
    LoadingTitle = "loading...",
    LoadingSubtitle = nil,
@@ -193,28 +193,28 @@ local function disableNoclip()
 end 
 
 local Button = Tab:CreateButton({
-    Name = "Infinite yeld",
+    Name = "♾️ Infinite yeld",
     Callback = function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/EdgeIY/infiniteyield/master/source"))()
     end,
 })
 
 local Button = Tab:CreateButton({
-     Name = "Dex Mobile",
+     Name = "📁 Dex Mobile",
      Callback = function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/raelhubfunctions/Save-scripts/refs/heads/main/DexMobile.lua"))()
     end,
 })
 
 local Button = Tab:CreateButton({
-     Name = "Tool Giver",
+     Name = "🧰 Tool Giver",
      Callback = function()
 loadstring(game:HttpGet("https://raw.githubusercontent.com/yofriendfromschool1/Sky-Hub-Backup/main/gametoolgiver.lua"))()
     end,
 })
 			
 local Button = Tab:CreateButton({
-    Name = "Permeant tptool",
+    Name = "🌀 Permeant tptool",
     Callback = function()
         local ToolName = "tptool "
         local function createTool()
@@ -241,21 +241,21 @@ local Button = Tab:CreateButton({
 local Divider = Tab:CreateDivider()
 
 local Button = Tab:CreateButton({
-    Name = "Shift lock",
+    Name = "🔗 Shift lock",
     Callback = function()
    loadstring(game:HttpGet('https://pastebin.com/raw/CjNsnSDy'))()
    end,
 })
 
 local Button = Tab:CreateButton({
-    Name = "Unc Test",
+    Name = "📝 Unc Test",
     Callback = function()
         loadstring(game:HttpGet("https://rawscripts.net/raw/Universal-Script-UNC-Test-13114"))()
     end,
 })
 
 local Button = Tab:CreateButton({
-    Name = "low-gfx",
+    Name = "📊 low-gfx",
     Callback = function()
         local ToDisable = {
             Textures = true,
@@ -330,7 +330,7 @@ local Button = Tab:CreateButton({
 })
 
 local Button = Tab:CreateButton({
-    Name = "disable leaderboard (Permanent)",
+    Name = "📈 Disable Leaderboard (Permanent)",
     Callback = function()
         local StarterGui = game:GetService("StarterGui")
 
@@ -349,7 +349,7 @@ local Button = Tab:CreateButton({
 local Divider = Tab:CreateDivider()
 
 local Toggle = Tab:CreateToggle({
-    Name = "Noclip",
+    Name = "🧱 Noclip",
     CurrentValue = false,
     Callback = function(Value)
         noclip = Value
@@ -381,7 +381,7 @@ local function disableAntiAFK()
 end
 
 local Toggle = Tab:CreateToggle({
-    Name = "Anti-AFK",
+    Name = "💤 Anti-AFK",
     CurrentValue = true,
     Callback = function(Value)
         antiAFK = Value
