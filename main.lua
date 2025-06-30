@@ -54,13 +54,25 @@ Rayfield:Notify({
 })
 
 local Window = Rayfield:CreateWindow({
-   Name = '<font color="#FFA500">Celvyn</font> <font color="#90EE90">| Beta</font>',
-   Icon = 119663846201777,
-   LoadingTitle = "loading...",
-   LoadingSubtitle = nil,
-   ShowText = "Menu",
-   Theme = t
+    Name = "Celvyn | Beta",
+    Icon = 119663846201777,
+    LoadingTitle = "loading...",
+    ShowText = "Menu",
+    Theme = t
 })
+
+task.delay(1, function()
+    local gui = game:GetService("CoreGui"):FindFirstChild("Rayfield")
+    if not gui then return end
+
+    for _, obj in ipairs(gui:GetDescendants()) do
+        if obj:IsA("TextLabel") and string.find(obj.Text, "Celvyn") then
+            obj.RichText = true
+            obj.Text = '<font color="#FFA500">Celvyn</font> <font color="#90EE90">| Beta</font>'
+            break
+        end
+    end
+end)
 
 local dTab = Window:CreateTab("Dashboard", "layout-dashboard")
 
