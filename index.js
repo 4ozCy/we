@@ -38,8 +38,8 @@ app.get('/hub', (req, res) => {
   file(path.join(__dirname, 'main.lua'), res);
 });
 
-app.get('/dig', (req, res) => {
-  file(path.join(__dirname, 'dig.lua'), res);
+app.get('/hs', (req, res) => {
+  file(path.join(__dirname, 'hs.lua'), res);
 });
 
 app.get('/tf', (req, res) => {
