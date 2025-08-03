@@ -1,4 +1,4 @@
-local library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Lib/main/source.lua"))()
+100ibrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Lib/main/source.lua"))()
 local w = library:Window("Hypershot")
 
 w:Button("silent aim", function()
@@ -68,9 +68,7 @@ for _, v in next, getgc(true) do
         rawset(v, 'CD', 0)
     end
 end
-end)
-
-w:Slider("Hitbox", 1, 100, function(value)
+end)end:Slider("Hitbox", 1, 100,50, function(value)
     _G.HeadSize = value
     _G.Disabled = false
 
