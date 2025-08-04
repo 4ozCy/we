@@ -1,4 +1,4 @@
-Sliderliderlideribrary = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Lib/main/source.lua"))()
+library = loadstring(game:HttpGet("https://raw.githubusercontent.com/Turtle-Brand/Turtle-Lib/main/source.lua"))()
 local w = library:Window("Hypershot")
 
 w:Button("silent aim", function()
