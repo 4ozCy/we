@@ -25,14 +25,11 @@ for _, Player in next, GetPlayers(Players) do
 if Player ~= LocalPlayer then
 local Character = Player.Character
 local Head = Character and FindFirstChild(Character, "Head")
-local Humanoid = Character and FindFirstChild(Character, 
-"Humanoid")
+local Humanoid = Character and FindFirstChild(Character, "Humanoid")
 if Head and (Humanoid and Humanoid.Health > 0) then
-local ScreenPos, IsVisible = 
-GetOnScreenPosition(Head.Position)
+local ScreenPos, IsVisible = GetOnScreenPosition(Head.Position)
 if IsVisible then
-local _Distance = (GetMousePosition() - 
-ScreenPos).Magnitude
+local _Distance = (GetMousePosition() - ScreenPos).Magnitude
 if _Distance <= Distance then
 Closest = Head
 Distance = _Distance
@@ -70,12 +67,15 @@ for _, v in next, getgc(true) do
   end
  end)
 
-w:Slider("Hitbox", 1, 100,50, function(value)
-    _G.HeadSize = value
+w:Box("Hitbox", function(text, focuslost)
+    if not focuslost then return end
+    local value = tonumber(text)
+    if not value then return end
+    _G.HeadSize = math.clamp(value, 1, 50)
     _G.Disabled = false
 
-    local Players = game:GetService('Players')
-    local RunService = game:GetService('RunService')
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
     local LocalPlayer = Players.LocalPlayer
     local MobsFolder = workspace:FindFirstChild("Mobs")
 
