@@ -185,12 +185,15 @@ for _, module in pairs(ModulesFolder:GetChildren()) do
 end
 end)
 
-w:Slider("Hitbox", 1, 100,50, function(value)
-    _G.HeadSize = value
+w:Box("Hitbox", function(text, focuslost)
+    if not focuslost then return end
+    local value = tonumber(text)
+    if not value then return end
+    _G.HeadSize = math.clamp(value, 1, 50)
     _G.Disabled = false
 
-    local Players = game:GetService('Players')
-    local RunService = game:GetService('RunService')
+    local Players = game:GetService("Players")
+    local RunService = game:GetService("RunService")
     local LocalPlayer = Players.LocalPlayer
     local MobsFolder = workspace:FindFirstChild("Mobs")
 
