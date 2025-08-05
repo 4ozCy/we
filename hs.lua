@@ -185,6 +185,48 @@ for _, module in pairs(ModulesFolder:GetChildren()) do
 end
 end)
 
+w:Button("Bring Head", function()
+local run_serivce = game:GetService("RunService")
+local workspace = game:GetService("Workspace")
+local players = game:GetService("Players")
+
+local local_player = players.LocalPlayer
+local camera = workspace.CurrentCamera
+
+local bots = workspace:FindFirstChild("Mobs")
+if (not bots) then
+	return local_player:Kick("Real players not found!!!!!!!")
+end
+
+run_serivce.RenderStepped:Connect(function()
+	for _, v in bots:GetChildren() do
+		if (local_player.Character and local_player.Character:GetAttribute("Team") ~= -1) and (v:GetAttribute("Team") == local_player.Character:GetAttribute("Team")) then
+			continue
+		end
+		local head = v:FindFirstChild("Head")
+		if (not head) then
+			continue
+		end
+		head.CFrame = camera.CFrame + camera.CFrame.lookVector * 7
+	end
+
+	for _, v in players:GetPlayers() do
+		if (v == local_player) then
+			continue
+		end
+		if (local_player.Character and local_player.Character:GetAttribute("Team") ~= -1) and (v.Character and v.Character:GetAttribute("Team") == local_player.Character:GetAttribute("Team")) then
+			continue
+		end
+		local head = v.Character and v.Character:FindFirstChild("Head")
+		if (not head) then
+			continue
+		end
+		head.CFrame = camera.CFrame + camera.CFrame.lookVector * 7
+	end
+end)
+print("m")
+end)
+
 w:Box("Hitbox", function(text, focuslost)
     if not focuslost then return end
     local value = tonumber(text)
