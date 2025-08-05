@@ -227,6 +227,47 @@ end)
 print("m")
 end)
 
+w:Toggle("Flag TP", false, function(state)
+	local RunService = game:GetService("RunService")
+	local Players = game:GetService("Players")
+
+	local player = Players.LocalPlayer
+	local character = player.Character or player.CharacterAdded:Wait()
+	local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+	local humanoid = character:WaitForChild("Humanoid")
+
+	local flag1 = workspace.Map.Flag1:WaitForChild("MainFlag")
+	local flag2 = workspace.Map.Flag2:WaitForChild("MainFlag")
+
+	local teleportHeight = 20
+	local waitAfterLand = 0.08
+
+	local toggled = state
+	local looping = false
+
+	local function waitForLanding()
+		repeat task.wait() until humanoid.FloorMaterial ~= Enum.Material.Air
+	end
+
+	local function teleportLoop()
+		looping = true
+		while toggled do
+			humanoidRootPart.CFrame = flag1.CFrame + Vector3.new(0, teleportHeight, 0)
+			waitForLanding()
+			task.wait(waitAfterLand)
+			if not toggled then break end
+			humanoidRootPart.CFrame = flag2.CFrame + Vector3.new(0, teleportHeight, 0)
+			waitForLanding()
+			task.wait(waitAfterLand)
+		end
+		looping = false
+	end
+
+	if toggled and not looping then
+		teleportLoop()
+	end
+end)
+
 w:Box("Hitbox", function(text, focuslost)
     if not focuslost then return end
     local value = tonumber(text)
