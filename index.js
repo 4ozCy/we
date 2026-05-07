@@ -34,10 +34,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-app.get('/dc', (req, res) => {
-  res.sendFile(path.join(__dirname, 'dc.html'));
-});
-
 app.get('/hub', (req, res) => {
   file(path.join(__dirname, 'main.lua'), res);
 });
