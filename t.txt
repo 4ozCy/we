@@ -1,0 +1,1330 @@
+local v1 = setmetatable({}, {
+    __index = function(_, k)
+        local c = workspace.CurrentCamera
+        local s = c and c.ViewportSize or Vector2.new(1920, 1080)
+        if k == "Width" then
+            return s.X
+        elseif k == "Height" then
+            return s.Y
+        elseif k == "Size" then
+            return s
+        end
+    end
+})
+
+local v2 = game:GetService("UserInputService")
+local v3 = workspace.CurrentCamera.ViewportSize
+
+local function v4(a, b)
+    local c = v2.TouchEnabled and not v2.KeyboardEnabled
+    local d, e = 1920, 1080
+    local f = c and 2 or 1.5
+    if a == "X" then
+        return b * (v3.X / d) * f
+    elseif a == "Y" then
+        return b * (v3.Y / e) * f
+    end
+end
+
+local function v5(a, b, c)
+    if type(b) == a then return b end
+    return c
+end
+
+local v6 = v5("function", cloneref, function(...) return ... end)
+local v7 = setmetatable({}, {
+    __index = function(_, a) return v6(game:GetService(a)) end
+})
+
+local v8 = v7.Players
+local v9 = v7.RunService
+local v10 = v7.UserInputService
+local v11 = v7.TweenService
+local v12 = v7.AvatarEditorService
+local v13 = v7.HttpService
+local v14 = v8.LocalPlayer
+local v15 = v14.Character or v14.CharacterAdded:Wait()
+local v16 = v15:WaitForChild("Humanoid")
+local isR6 = v16.RigType == Enum.HumanoidRigType.R6
+local v17 = v15.PrimaryPart and v15.PrimaryPart.Position or Vector3.new()
+local v35Ref, v36Ref, v37Ref, v39Ref, v43Ref;
+
+v14.CharacterAdded:Connect(function(a)
+    v15 = a
+    v16 = a:WaitForChild("Humanoid")
+    isR6 = v16.RigType == Enum.HumanoidRigType.R6
+    if v35Ref then v35Ref.Text = isR6 and "GAZE SMOTES" or "Gaze Emotes" end
+    if v36Ref then v36Ref.Text = isR6 and "Anim" or "Catalog" end
+    if v37Ref then v37Ref.Visible = not isR6 end
+    if isR6 and v39Ref and v43Ref then
+        v39Ref.Visible = true
+        v43Ref.Visible = false
+        v36Ref.BackgroundColor3 = Color3.fromRGB(30, 30, 80)
+        v37Ref.BackgroundColor3 = Color3.fromRGB(20, 50, 20)
+    end
+    v17 = v15.PrimaryPart and v15.PrimaryPart.Position or Vector3.new()
+end)
+
+local v18 = {}
+v18["Stop Emote When Moving"] = true
+v18["Fade In"] = 0.1
+v18["Fade Out"] = 0.1
+v18["Weight"] = 1
+v18["Speed"] = 1
+v18["Time Position"] = 0
+v18["Freeze On Finish"] = false
+v18["Looped"] = true
+v18["Stop Other Animations On Play"] = true
+v18["High Priority"] = true
+
+local v19 = {}
+local v20 = "GazeEmotes/NewNEWN3WSaved.json"
+
+local function v21()
+    local a, b = pcall(function()
+        if readfile and isfile and isfile(v20) then
+            return v13:JSONDecode(readfile(v20))
+        end
+        return {}
+    end)
+    if a and type(b) == "table" then
+        v19 = b
+    else
+        v19 = {}
+    end
+    for c, d in ipairs(v19) do
+        if not d.AnimationId then
+            if d.AssetId then
+                d.AnimationId = "rbxassetid://" .. tostring(d.AssetId)
+            else
+                d.AnimationId = "rbxassetid://" .. tostring(d.Id)
+            end
+        end
+        if d.Favorite == nil then d.Favorite = false end
+    end
+end
+
+local function v22()
+    pcall(function()
+        if writefile then writefile(v20, v13:JSONEncode(v19)) end
+    end)
+end
+v21()
+
+local v23 = nil
+local function v24(a)
+    if v23 then v23:Stop(v18["Fade Out"]) end
+    local b
+    local c, d = pcall(function() return game:GetObjects("rbxassetid://" .. tostring(a)) end)
+    
+    if c and d and #d > 0 then
+        local e = d[1]
+        if e:IsA("Animation") then
+            b = e.AnimationId
+        else
+            b = "rbxassetid://" .. tostring(a)
+        end
+    else
+        b = "rbxassetid://" .. tostring(a)
+    end
+    
+    local e = Instance.new("Animation")
+    e.AnimationId = b
+    local f = v16.Animator:LoadAnimation(e)
+    local g = v18["High Priority"] and Enum.AnimationPriority.Action4 or Enum.AnimationPriority.Action
+    f.Priority = g
+    local h = v18["Weight"]
+    if h == 0 then h = 0.001 end
+    
+    if v18["Stop Other Animations On Play"] then
+        for i, j in pairs(v16.Animator:GetPlayingAnimationTracks()) do
+            if j.Priority ~= g then j:Stop() end
+        end
+    end
+    
+    f:Play(v18["Fade In"], h, v18["Speed"])
+    v23 = f
+    v23.TimePosition = math.clamp(v18["Time Position"], 0, 1) * (v23.Length or 1)
+    v23.Priority = g
+    v23.Looped = v18["Looped"]
+    return f
+end
+
+v9.RenderStepped:Connect(function()
+    if v18["Looped"] and v23 and v23.IsPlaying then v23.Looped = v18["Looped"] end
+    if v15:FindFirstChild("HumanoidRootPart") then
+        local a = v15.HumanoidRootPart
+        if v18["Stop Emote When Moving"] and v23 and v23.IsPlaying then
+            local b = (a.Position - v17).Magnitude > 0.1
+            local c = v16 and v16:GetState() == Enum.HumanoidStateType.Jumping
+            if b or c then
+                v23:Stop(v18["Fade Out"])
+                v23 = nil
+            end
+        end
+        v17 = a.Position
+    end
+end)
+
+local v25 = v7.CoreGui
+local v26 = Instance.new("ScreenGui")
+v26.Name = "GazeEmoteGUI"
+v26.Parent = v25
+v26.Enabled = false
+v26.DisplayOrder = 999
+
+local function v27(a, b)
+    local c = Instance.new("UICorner")
+    c.CornerRadius = UDim.new(0, b or 6)
+    c.Parent = a
+    return c
+end
+
+local function v28(a, b, c)
+    local d = Instance.new("UIStroke")
+    d.Color = b or Color3.fromRGB(60, 120, 200)
+    d.Thickness = c or 1
+    d.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+    d.Parent = a
+    return d
+end
+
+local function v29(a)
+    local b = Instance.new("UIScale")
+    b.Scale = 0.5
+    b.Parent = a
+    v11:Create(b, TweenInfo.new(0.4, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {Scale = 1}):Play()
+end
+
+local v30 = Instance.new("Frame")
+v30.Size = UDim2.new(0, v4("X", 470), 0, v4("Y", 450))
+v30.Position = UDim2.new(0.5, -v4("X", 325), 0.5, -v4("Y", 225))
+v30.BackgroundColor3 = Color3.fromRGB(15, 15, 20)
+v30.BackgroundTransparency = 0.15
+v30.Active = true
+v30.Draggable = true
+v30.Parent = v26
+v27(v30, 8)
+v28(v30, Color3.fromRGB(80, 80, 120), 1.5)
+
+local v31 = Instance.new("TextButton")
+v31.Size = UDim2.new(0, 24, 0, 24)
+v31.Position = UDim2.new(1, -24, 1, -24)
+v31.BackgroundTransparency = 1
+v31.Text = "◢"
+v31.TextColor3 = Color3.fromRGB(100, 100, 140)
+v31.TextSize = 18
+v31.ZIndex = 10
+v31.Parent = v30
+
+local v32 = false
+local v33
+local v34
+v31.InputBegan:Connect(function(a)
+    if a.UserInputType == Enum.UserInputType.MouseButton1 or a.UserInputType == Enum.UserInputType.Touch then
+        v32 = true
+        v33 = a.Position
+        v34 = v30.AbsoluteSize
+    end
+end)
+
+v10.InputChanged:Connect(function(a)
+    if v32 and (a.UserInputType == Enum.UserInputType.MouseMovement or a.UserInputType == Enum.UserInputType.Touch) then
+        local b = a.Position - v33
+        local c = math.max(150, v34.X + b.X)
+        local d = math.max(100, v34.Y + b.Y)
+        v30.Size = UDim2.new(0, c, 0, d)
+    end
+end)
+
+v10.InputEnded:Connect(function(a)
+    if a.UserInputType == Enum.UserInputType.MouseButton1 or a.UserInputType == Enum.UserInputType.Touch then
+        v32 = false
+    end
+end)
+
+local v35 = Instance.new("TextLabel")
+v35Ref = v35
+v35.Size = UDim2.new(1, 0, 0, v4("Y", 36))
+v35.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+v35.BackgroundTransparency = 0.5
+v35.Text = isR6 and "Gaze Emotes (R6)" or "Gaze Emotes"
+v35.TextColor3 = Color3.new(1, 1, 1)
+v35.Font = Enum.Font.GothamBold
+v35.TextScaled = true
+v35.Parent = v30
+v27(v35, 8)
+
+local v36 = Instance.new("TextButton")
+v36Ref = v36
+v36.Size = UDim2.new(0.3, 0, 0, v4("Y", 24))
+v36.Position = UDim2.new(0.05, 0, 0, v4("Y", 40))
+v36.BackgroundColor3 = Color3.fromRGB(30, 30, 80)
+v36.BackgroundTransparency = 0.2
+v36.Text = isR6 and "Animation" or "Catalog"
+v36.TextColor3 = Color3.new(1, 1, 1)
+v36.Font = Enum.Font.GothamBold
+v36.TextScaled = true
+v36.Parent = v30
+v27(v36, 4)
+
+local v37 = Instance.new("TextButton")
+v37Ref = v37
+v37.Size = UDim2.new(0.3, 0, 0, v4("Y", 24))
+v37.Position = UDim2.new(0.35, 0, 0, v4("Y", 40))
+v37.BackgroundColor3 = Color3.fromRGB(30, 80, 30)
+v37.BackgroundTransparency = 0.2
+v37.Text = "Saved"
+v37.TextColor3 = Color3.new(1, 1, 1)
+v37.Font = Enum.Font.GothamBold
+v37.TextScaled = true
+v37.Visible = not isR6
+v37.Parent = v30
+v27(v37, 4)
+
+local v38 = Instance.new("Frame")
+v38.Size = UDim2.new(0, v4("X", 2), 1, -v4("Y", 70))
+v38.Position = UDim2.new(0.6, -v4("X", 1), 0, v4("Y", 70))
+v38.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+v38.BackgroundTransparency = 0.5
+v38.Parent = v30
+
+local v39 = Instance.new("Frame")
+v39Ref = v39
+v39.Size = UDim2.new(0.6, -v4("X", 10), 1, -v4("Y", 70))
+v39.Position = UDim2.new(0, v4("X", 5), 0, v4("Y", 70))
+v39.BackgroundTransparency = 1
+v39.Visible = true
+v39.Parent = v30
+
+local v40 = Instance.new("TextBox")
+v40.Size = UDim2.new(0.6, -v4("X", 8), 0, v4("Y", 28))
+v40.Position = UDim2.new(0, v4("X", 8), 0, 0)
+v40.PlaceholderText = "Search..."
+v40.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+v40.BackgroundTransparency = 0.3
+v40.TextColor3 = Color3.new(1, 1, 1)
+v40.Font = Enum.Font.Gotham
+v40.TextScaled = true
+v40.ClearTextOnFocus = false
+v40.Text = ""
+v40.Parent = v39
+v27(v40, 4)
+v28(v40, Color3.fromRGB(50, 50, 70), 1)
+
+local v41 = Instance.new("TextButton")
+v41.Size = UDim2.new(0.2, -v4("X", 4), 0, v4("Y", 28))
+v41.Position = UDim2.new(0.6, v4("X", 4), 0, 0)
+v41.BackgroundColor3 = Color3.fromRGB(0, 60, 150)
+v41.BackgroundTransparency = 0.2
+v41.Text = "Refresh"
+v41.Font = Enum.Font.GothamBold
+v41.TextScaled = true
+v41.TextColor3 = Color3.new(1, 1, 1)
+v41.Parent = v39
+v27(v41, 4)
+
+local v42 = Instance.new("TextButton")
+v42.Size = UDim2.new(0.2, -v4("X", 8), 0, v4("Y", 28))
+v42.Position = UDim2.new(0.8, v4("X", 4), 0, 0)
+v42.BackgroundColor3 = Color3.fromRGB(40, 40, 80)
+v42.BackgroundTransparency = 0.2
+v42.Text = "Sort: Relevance"
+v42.Font = Enum.Font.GothamBold
+v42.TextScaled = true
+v42.TextColor3 = Color3.new(1, 1, 1)
+v42.Parent = v39
+v27(v42, 4)
+
+local v43 = Instance.new("Frame")
+v43Ref = v43
+v43.Size = UDim2.new(0.6, -v4("X", 10), 1, -v4("Y", 70))
+v43.Position = UDim2.new(0, v4("X", 5), 0, v4("Y", 70))
+v43.BackgroundTransparency = 1
+v43.Visible = false
+v43.Parent = v30
+
+local v44 = Instance.new("TextBox")
+v44.Size = UDim2.new(0.7, -v4("X", 16), 0, v4("Y", 28))
+v44.Position = UDim2.new(0, v4("X", 8), 0, 0)
+v44.PlaceholderText = "Search Saved..."
+v44.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+v44.BackgroundTransparency = 0.3
+v44.TextColor3 = Color3.new(1, 1, 1)
+v44.Font = Enum.Font.Gotham
+v44.TextScaled = true
+v44.ClearTextOnFocus = false
+v44.Text = ""
+v44.Parent = v43
+v27(v44, 4)
+v28(v44, Color3.fromRGB(50, 50, 70), 1)
+
+local v44a = Instance.new("TextBox")
+v44a.Size = UDim2.new(0.2, 0, 0, v4("Y", 28))
+v44a.Position = UDim2.new(0.7, -v4("X", 4), 0, 0)
+v44a.PlaceholderText = "Emote ID"
+v44a.BackgroundColor3 = Color3.fromRGB(20, 20, 25)
+v44a.BackgroundTransparency = 0.3
+v44a.TextColor3 = Color3.new(1, 1, 1)
+v44a.Font = Enum.Font.Gotham
+v44a.TextScaled = true
+v44a.ClearTextOnFocus = false
+v44a.Text = ""
+v44a.Parent = v43
+v27(v44a, 4)
+v28(v44a, Color3.fromRGB(50, 50, 70), 1)
+
+local v44b = Instance.new("TextButton")
+v44b.Size = UDim2.new(0.1, 0, 0, v4("Y", 28))
+v44b.Position = UDim2.new(0.9, 0, 0, 0)
+v44b.BackgroundColor3 = Color3.fromRGB(40, 100, 160)
+v44b.BackgroundTransparency = 0.2
+v44b.Text = "+"
+v44b.Font = Enum.Font.GothamBold
+v44b.TextScaled = true
+v44b.TextColor3 = Color3.new(1, 1, 1)
+v44b.Parent = v43
+v27(v44b, 4)
+
+local v45 = Instance.new("ScrollingFrame")
+v45.Size = UDim2.new(1, -v4("X", 16), 1, -v4("Y", 40))
+v45.Position = UDim2.new(0, v4("X", 8), 0, v4("Y", 36))
+v45.CanvasSize = UDim2.new(0, 0, 0, 0)
+v45.ScrollBarThickness = 0
+v45.BackgroundTransparency = 1
+v45.Parent = v43
+
+local v46 = Instance.new("TextLabel")
+v46.Size = UDim2.new(1, 0, 0, v4("Y", 36))
+v46.Position = UDim2.new(0, 0, 0.5, -v4("Y", 18))
+v46.BackgroundTransparency = 1
+v46.Text = "Sorry I Was Changing Save Files Again 😅"
+v46.TextColor3 = Color3.new(1, 1, 1)
+v46.Font = Enum.Font.GothamBold
+v46.TextScaled = true
+v46.Visible = false
+v46.Parent = v45
+
+local v47 = Instance.new("UIGridLayout")
+v47.CellSize = UDim2.new(0, v4("X", 120), 0, v4("Y", 200))
+v47.CellPadding = UDim2.new(0, v4("X", 8), 0, v4("Y", 8))
+v47.HorizontalAlignment = Enum.HorizontalAlignment.Center
+v47.Parent = v45
+
+local v48 = Instance.new("Frame")
+v48.Size = UDim2.new(0.4, -v4("X", 10), 1, -v4("Y", 70))
+v48.Position = UDim2.new(0.6, v4("X", 5), 0, v4("Y", 70))
+v48.BackgroundTransparency = 1
+v48.Parent = v30
+
+local v49 = Instance.new("TextLabel")
+v49.Size = UDim2.new(1, 0, 0, v4("Y", 28))
+v49.BackgroundTransparency = 1
+v49.Text = "Settings"
+v49.TextColor3 = Color3.new(1, 1, 1)
+v49.Font = Enum.Font.GothamBold
+v49.TextScaled = true
+v49.Parent = v48
+
+local v50 = Instance.new("ScrollingFrame")
+v50.Size = UDim2.new(1, -v4("X", 20), 1, -v4("Y", 40))
+v50.Position = UDim2.new(0, v4("X", 10), 0, v4("Y", 30))
+v50.BackgroundTransparency = 1
+v50.CanvasSize = UDim2.new(0, 0, 0, 0)
+v50.ScrollBarThickness = 4
+v50.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 140)
+v50.Parent = v48
+
+local function v51() v50.CanvasPosition = Vector2.new(0, v50.CanvasPosition.Y) end
+v50:GetPropertyChangedSignal("CanvasPosition"):Connect(v51)
+
+local v52 = Instance.new("UIListLayout", v50)
+v52.Padding = UDim.new(0, 8)
+v52.FillDirection = Enum.FillDirection.Vertical
+v52.SortOrder = Enum.SortOrder.LayoutOrder
+v52:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+    v50.CanvasSize = UDim2.new(0, 0, 0, v52.AbsoluteContentSize.Y + 10)
+end)
+
+function GetReal(a)
+    local b, c = pcall(function() return game:GetObjects("rbxassetid://" .. tostring(a)) end)
+    if b and c and #c > 0 then
+        local d = c[1]
+        if d:IsA("Animation") and d.AnimationId ~= "" then
+            return tonumber(d.AnimationId:match("%d+"))
+        elseif d:FindFirstChildOfClass("Animation") then
+            local e = d:FindFirstChildOfClass("Animation")
+            return tonumber(e.AnimationId:match("%d+"))
+        end
+    end
+end
+
+local v80
+v44b.MouseButton1Click:Connect(function()
+    local a = tonumber(v44a.Text)
+    if a then
+        local b = false
+        for c, d in ipairs(v19) do
+            if d.Id == a then
+                b = true
+                break
+            end
+        end
+        if not b then
+            local e = GetReal(a)
+            table.insert(v19, {
+                Id = a,
+                AssetId = a,
+                Name = "Custom ID: " .. a,
+                AnimationId = "rbxassetid://" .. tostring(e or a),
+                Favorite = false
+            })
+            v22()
+            if v80 then v80() end
+        end
+    end
+end)
+
+v18.sliders = {}
+v18.toggles = {}
+local function v53(a, b, c, d)
+    v18[a] = d or b
+    local e = Instance.new("Frame")
+    e.Size = UDim2.new(1, 0, 0, v4("Y", 65))
+    e.BackgroundTransparency = 1
+    e.Parent = v50
+    local f = Instance.new("Frame")
+    f.Size = UDim2.new(1, 0, 1, 0)
+    f.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    f.BackgroundTransparency = 0.4
+    f.Parent = e
+    v27(f, 6)
+    v28(f, Color3.fromRGB(60, 60, 90), 1)
+    
+    local g = Instance.new("TextLabel")
+    g.Size = UDim2.new(0.5, -v4("X", 10), 0, v4("Y", 20))
+    g.Position = UDim2.new(0, 10, 0, 5)
+    g.BackgroundTransparency = 1
+    g.Text = string.format("%s: %.2f", a, v18[a])
+    g.TextColor3 = Color3.new(1, 1, 1)
+    g.Font = Enum.Font.Gotham
+    g.TextScaled = true
+    g.TextXAlignment = Enum.TextXAlignment.Left
+    g.Parent = f
+    
+    local h = Instance.new("TextBox")
+    h.Size = UDim2.new(0.5, -v4("X", 20), 0, v4("Y", 20))
+    h.Position = UDim2.new(0.5, v4("X", 10), 0, v4("Y", 5))
+    h.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
+    h.Text = tostring(v18[a])
+    h.TextColor3 = Color3.new(1, 1, 1)
+    h.Font = Enum.Font.Gotham
+    h.TextScaled = true
+    h.ClearTextOnFocus = false
+    h.Parent = f
+    v27(h, 4)
+    
+    local i = Instance.new("Frame")
+    i.Size = UDim2.new(1, -v4("X", 40), 0, v4("Y", 12))
+    i.Position = UDim2.new(0, v4("X", 20), 0, v4("Y", 35))
+    i.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+    i.Parent = f
+    v27(i, 6)
+    
+    local j = Instance.new("Frame")
+    j.Size = UDim2.new(0, 0, 1, 0)
+    j.BackgroundColor3 = Color3.fromRGB(0, 140, 255)
+    j.Parent = i
+    v27(j, 6)
+    
+    local k = Instance.new("Frame")
+    k.Size = UDim2.new(0, v4("X", 20), 0, v4("Y", 20))
+    k.AnchorPoint = Vector2.new(0.5, 0.5)
+    k.Position = UDim2.new(0, 0, 0.5, 0)
+    k.BackgroundColor3 = Color3.fromRGB(220, 220, 255)
+    k.Parent = i
+    v27(k, 10)
+    v28(k, Color3.fromRGB(0, 0, 0), 1)
+    
+    local function l(m)
+        local n = math.clamp(m, 0, 1)
+        v11:Create(j, TweenInfo.new(0.15), {Size = UDim2.new(n, 0, 1, 0)}):Play()
+        v11:Create(k, TweenInfo.new(0.15), {Position = UDim2.new(n, 0, 0.5, 0)}):Play()
+    end
+    
+    local function o(p)
+        v18[a] = math.clamp(p, b, c)
+        g.Text = string.format("%s: %.2f", a, v18[a])
+        h.Text = tostring(v18[a])
+        local q = (v18[a] - b) / (c - b)
+        l(q)
+        if v23 and v23.IsPlaying then
+            if a == "Speed" then
+                v23:AdjustSpeed(v18["Speed"])
+            elseif a == "Weight" then
+                local r = v18["Weight"]
+                if r == 0 then r = 0.001 end
+                v23:AdjustWeight(r)
+            elseif a == "Time Position" then
+                if v23.Length > 0 then
+                    v23.TimePosition = math.clamp(p, 0, 1) * v23.Length
+                end
+            end
+        end
+    end
+    
+    local s = false
+    local function t(u)
+        local v = math.clamp((u.Position.X - i.AbsolutePosition.X) / i.AbsoluteSize.X, 0, 1)
+        local w = math.floor((b + (c - b) * v) * 100) / 100
+        o(w)
+    end
+    
+    i.InputBegan:Connect(function(x)
+        if x.UserInputType == Enum.UserInputType.MouseButton1 or x.UserInputType == Enum.UserInputType.Touch then
+            s = true
+            t(x)
+        end
+    end)
+    k.InputBegan:Connect(function(y)
+        if y.UserInputType == Enum.UserInputType.MouseButton1 or y.UserInputType == Enum.UserInputType.Touch then
+            s = true
+            t(y)
+        end
+    end)
+    
+    v10.InputChanged:Connect(function(z)
+        if s and (z.UserInputType == Enum.UserInputType.MouseMovement or z.UserInputType == Enum.UserInputType.Touch) then
+            t(z)
+        end
+    end)
+    
+    v10.InputEnded:Connect(function(A)
+        if s and (A.UserInputType == Enum.UserInputType.MouseButton1 or A.UserInputType == Enum.UserInputType.Touch) then
+            s = false
+        end
+    end)
+    
+    h.FocusLost:Connect(function(B)
+        if B then
+            local C = tonumber(h.Text)
+            if C then
+                o(C)
+            else
+                h.Text = tostring(v18[a])
+            end
+        end
+    end)
+    
+    v18.sliders[a] = o
+    o(v18[a])
+end
+
+local function v54(a)
+    v18[a] = v18[a] or false
+    local b = Instance.new("Frame")
+    b.Size = UDim2.new(1, 0, 0, v4("Y", 40))
+    b.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    b.BackgroundTransparency = 0.4
+    b.Parent = v50
+    v27(b, 6)
+    v28(b, Color3.fromRGB(60, 60, 90), 1)
+    
+    local c = Instance.new("TextLabel")
+    c.Size = UDim2.new(1, -v4("X", 90), 1, 0)
+    c.Position = UDim2.new(0, v4("X", 10), 0, 0)
+    c.BackgroundTransparency = 1
+    c.Text = a
+    c.TextColor3 = Color3.new(1, 1, 1)
+    c.Font = Enum.Font.Gotham
+    c.TextScaled = true
+    c.TextXAlignment = Enum.TextXAlignment.Left
+    c.Parent = b
+    
+    local d = Instance.new("TextButton")
+    d.Size = UDim2.new(0, v4("X", 60), 0, v4("Y", 24))
+    d.Position = UDim2.new(1, -v4("X", 70), 0.5, -v4("Y", 12))
+    d.TextColor3 = Color3.new(1, 1, 1)
+    d.Font = Enum.Font.GothamBold
+    d.TextScaled = true
+    d.Parent = b
+    v27(d, 4)
+    
+    local function e(f)
+        d.Text = f and "ON" or "OFF"
+        d.BackgroundColor3 = f and Color3.fromRGB(0, 150, 100) or Color3.fromRGB(150, 40, 40)
+        d.BackgroundTransparency = 0.2
+    end
+    
+    d.MouseButton1Click:Connect(function()
+        v18[a] = not v18[a]
+        e(v18[a])
+    end)
+    e(v18[a])
+    v18.toggles[a] = e
+end
+
+function v18:EditSlider(a, b)
+    local c = self.sliders[a]
+    if c then c(b) end
+end
+
+function v18:EditToggle(a, b)
+    local c = self.toggles[a]
+    if c then
+        v18[a] = b
+        c(b)
+    end
+end
+
+local function v55(a, b)
+    local c = Instance.new("Frame")
+    c.Size = UDim2.new(1, 0, 0, v4("Y", 45))
+    c.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
+    c.BackgroundTransparency = 0.4
+    c.Parent = v50
+    v27(c, 6)
+    local d = Instance.new("TextButton")
+    d.Size = UDim2.new(1, -v4("X", 20), 1, -v4("Y", 10))
+    d.Position = UDim2.new(0, v4("X", 10), 0, v4("Y", 5))
+    d.BackgroundColor3 = Color3.fromRGB(30, 90, 180)
+    d.BackgroundTransparency = 0.2
+    d.Text = a
+    d.TextColor3 = Color3.new(1, 1, 1)
+    d.Font = Enum.Font.GothamBold
+    d.TextScaled = true
+    d.Parent = c
+    v27(d, 6)
+    d.MouseButton1Click:Connect(function()
+        if typeof(b) == "function" then b() end
+    end)
+    return d
+end
+
+local v56 = v55("Reset Settings", function() end)
+v54("Stop Emote When Moving")
+v54("Looped")
+v53("Speed", 0, 5, v18["Speed"])
+v53("Time Position", 0, 1, v18["Time Position"])
+v53("Weight", 0, 1, v18["Weight"])
+v53("Fade In", 0, 2, v18["Fade In"])
+v53("Fade Out", 0, 2, v18["Fade Out"])
+v54("Stop Other Animations On Play")
+v54("High Priority")
+
+v56.MouseButton1Click:Connect(function()
+    v18:EditToggle("Stop Emote When Moving", true)
+    v18:EditToggle("Stop Other Animations On Play", true)
+    v18:EditToggle("High Priority", true)
+    v18:EditSlider("Fade In", 0.1)
+    v18:EditSlider("Fade Out", 0.1)
+    v18:EditSlider("Weight", 1)
+    v18:EditSlider("Speed", 1)
+    v18:EditSlider("Time Position", 0)
+    v18:EditToggle("Freeze On Finish", false)
+    v18:EditToggle("Looped", true)
+end)
+
+local v57 = {
+    {Enum.CatalogSortType.Relevance, "Relevance"},
+    {Enum.CatalogSortType.PriceHighToLow, "Price High→Low"},
+    {Enum.CatalogSortType.PriceLowToHigh, "Price Low→High"},
+    {Enum.CatalogSortType.MostFavorited, "Most Favorited"},
+    {Enum.CatalogSortType.RecentlyCreated, "Recently Created"},
+    {Enum.CatalogSortType.Bestselling, "Bestselling"}
+}
+local v58 = 1
+local v59 = ""
+local v60 = nil
+local v61 = 1
+local vTAB = 1
+
+local function v62(a)
+    if isR6 then
+        return {
+            IsFinished = true,
+            GetCurrentPage = function() return {{Id = 115314801778772, Name = "Dance If Youre The Best", AssetId = 115314801778772}} end,
+            AdvanceToNextPageAsync = function() end
+        }
+    end
+    local b = CatalogSearchParams.new()
+    b.SearchKeyword = a or ""
+    b.CategoryFilter = Enum.CatalogCategoryFilter.None
+    b.SalesTypeFilter = Enum.SalesTypeFilter.All
+    b.AssetTypes = {Enum.AvatarAssetType.EmoteAnimation}
+    b.IncludeOffSale = true
+    b.SortType = v57[v58][1]
+    b.Limit = 10
+    local c, d = pcall(function() return v12:SearchCatalog(b) end)
+    if not c then return nil end
+    return d
+end
+
+local function v63(a)
+    local b = Instance.new("Frame")
+    b.Size = UDim2.new(0, v4("X", 120), 0, v4("Y", 180))
+    b.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    b.BackgroundTransparency = 0.2
+    v27(b, 8)
+    v28(b, Color3.fromRGB(60, 60, 90), 1)
+    
+    local c = a.AssetId or a.Id
+    local d = Instance.new("ImageLabel")
+    d.Size = UDim2.new(1, -v4("X", 10), 0, v4("Y", 90))
+    d.Position = UDim2.new(0, v4("X", 5), 0, v4("Y", 5))
+    d.BackgroundTransparency = 1
+    d.ScaleType = Enum.ScaleType.Fit
+    pcall(function() d.Image = "rbxthumb://type=Asset&id=" .. tonumber(c) .. "&w=150&h=150" end)
+    d.Parent = b
+    v27(d, 4)
+    
+    local e = Instance.new("TextLabel")
+    e.Size = UDim2.new(1, -v4("X", 10), 0, v4("Y", 28))
+    e.Position = UDim2.new(0, v4("X", 5), 0, v4("Y", 100))
+    e.BackgroundTransparency = 1
+    e.Text = a.Name or "Unknown"
+    e.TextScaled = true
+    e.TextWrapped = true
+    e.Font = Enum.Font.GothamBold
+    e.TextColor3 = Color3.new(1, 1, 1)
+    e.Parent = b
+    
+    local f = "https://www.roblox.com/catalog/" .. tonumber(a.Id)
+    local g = Instance.new("TextButton")
+    g.Parent = b
+    g.Size = UDim2.new(0, v4("X", 36), 0, v4("Y", 36))
+    g.Position = UDim2.new(1, -v4("X", 42), 0, v4("Y", 5))
+    g.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    g.BackgroundTransparency = 0.2
+    g.Text = "🛒🔗"
+    g.Font = Enum.Font.GothamBold
+    g.TextScaled = true
+    g.TextColor3 = Color3.fromRGB(255, 255, 255)
+    g.AutoButtonColor = false
+    v27(g, 6)
+    
+    g.MouseButton1Click:Connect(function()
+        setclipboard(f)
+        g.Text = "✅"
+        g.BackgroundColor3 = Color3.fromRGB(0, 150, 100)
+        task.wait(0.7)
+        g.Text = "🛒🔗"
+        g.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+    end)
+    
+    local h = Instance.new("TextButton")
+    h.Size = UDim2.new(0.45, -v4("X", 5), 0, v4("Y", 24))
+    h.Position = UDim2.new(0, v4("X", 5), 1, -v4("Y", 29))
+    h.BackgroundColor3 = Color3.fromRGB(40, 140, 80)
+    h.BackgroundTransparency = 0.2
+    h.Text = "Play"
+    h.Font = Enum.Font.GothamBold
+    h.TextScaled = true
+    h.TextColor3 = Color3.new(1, 1, 1)
+    h.Parent = b
+    v27(h, 4)
+    h.MouseButton1Click:Connect(function() v24(c) end)
+    
+    local i = Instance.new("TextButton")
+    i.Size = UDim2.new(0.45, -v4("X", 5), 0, v4("Y", 24))
+    i.Position = UDim2.new(0.55, 0, 1, -v4("Y", 29))
+    i.BackgroundColor3 = Color3.fromRGB(40, 100, 160)
+    i.BackgroundTransparency = 0.2
+    i.Text = "Save"
+    i.Font = Enum.Font.GothamBold
+    i.TextScaled = true
+    i.TextColor3 = Color3.new(1, 1, 1)
+    i.Parent = b
+    v27(i, 4)
+    
+    i.MouseButton1Click:Connect(function()
+        local j = false
+        for k, l in ipairs(v19) do
+            if l.Id == a.Id then
+                j = true
+                break
+            end
+        end
+        if not j then
+            local m = GetReal(c)
+            table.insert(v19, {
+                Id = a.Id,
+                AssetId = c,
+                Name = a.Name or "Unknown",
+                AnimationId = "rbxassetid://" .. tostring(m or c),
+                Favorite = false
+            })
+            v22()
+            i.Text = "Saved!"
+            i.BackgroundColor3 = Color3.fromRGB(0, 160, 100)
+            task.wait(1)
+            i.Text = "Save"
+            i.BackgroundColor3 = Color3.fromRGB(40, 100, 160)
+        else
+            i.Text = "Already"
+            task.wait(0.7)
+            i.Text = "Save"
+        end
+    end)
+    v29(b)
+    return b
+end
+
+local v64 = Instance.new("ScrollingFrame")
+v64.Size = UDim2.new(1, -v4("X", 16), 1, -v4("Y", 100))
+v64.Position = UDim2.new(0, v4("X", 8), 0, v4("Y", 36))
+v64.CanvasSize = UDim2.new(0, 0, 0, 0)
+v64.ScrollBarThickness = 6
+v64.ScrollBarImageColor3 = Color3.fromRGB(100, 100, 140)
+v64.BackgroundTransparency = 1
+v64.Parent = v39
+
+local v65 = Instance.new("UIGridLayout", v64)
+v65.CellSize = UDim2.new(0, v4("X", 120), 0, v4("Y", 180))
+v65.CellPadding = UDim2.new(0, v4("X", 8), 0, v4("Y", 8))
+
+local v66 = Instance.new("TextLabel", v64)
+v66.Size = UDim2.new(1, 0, 0, v4("Y", 36))
+v66.Position = UDim2.new(0, 0, 0.5, -v4("Y", 18))
+v66.BackgroundTransparency = 1
+v66.Text = "Nothing Silly Here :3 (except me)"
+v66.TextColor3 = Color3.new(1, 1, 1)
+v66.Font = Enum.Font.GothamBold
+v66.TextScaled = true
+v66.Visible = false
+
+local v67 = Instance.new("TextButton", v39)
+v67.Size = UDim2.new(0.4, -v4("X", 6), 0, v4("Y", 32))
+v67.Position = UDim2.new(0, v4("X", 4), 1, -v4("Y", 36))
+v67.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+v67.BackgroundTransparency = 0.2
+v67.Text = "< Prev"
+v67.Font = Enum.Font.GothamBold
+v67.TextScaled = true
+v67.TextColor3 = Color3.new(1, 1, 1)
+v27(v67, 6)
+
+local v68 = Instance.new("TextButton", v39)
+v68.Size = UDim2.new(0.4, -v4("X", 6), 0, v4("Y", 32))
+v68.Position = UDim2.new(0.6, v4("X", 2), 1, -v4("Y", 36))
+v68.BackgroundColor3 = Color3.fromRGB(50, 50, 70)
+v68.BackgroundTransparency = 0.2
+v68.Text = "Next >"
+v68.Font = Enum.Font.GothamBold
+v68.TextScaled = true
+v68.TextColor3 = Color3.new(1, 1, 1)
+v27(v68, 6)
+
+local v69 = Instance.new("TextBox", v39)
+v69.Size = UDim2.new(0.2, 0, 0, v4("Y", 32))
+v69.Position = UDim2.new(0.4, v4("X", 2), 1, -v4("Y", 36))
+v69.BackgroundTransparency = 1
+v69.Font = Enum.Font.Gotham
+v69.TextScaled = true
+v69.TextColor3 = Color3.new(1, 1, 1)
+v69.Text = "1 / Enter page"
+
+local v70 = Instance.new("TextLabel", v39)
+v70.Size = UDim2.new(0.3, 0, 0, v4("Y", 24))
+v70.Position = UDim2.new(0.35, 0, 1, -v4("Y", 68))
+v70.BackgroundTransparency = 1
+v70.TextColor3 = Color3.fromRGB(255, 100, 100)
+v70.Font = Enum.Font.Gotham
+v70.TextScaled = true
+v70.Text = ""
+v70.Visible = false
+
+local function v71()
+    v67.Visible = (v61 > 1)
+    if v60 and typeof(v60.IsFinished) == "boolean" then
+        v68.Visible = not v60.IsFinished
+    else
+        v68.Visible = true
+    end
+end
+
+local v73id = 0
+local function v73(a)
+    v73id = v73id + 1
+    local myId = v73id
+    v69.Text = "Loading..."
+    for b, c in ipairs(v64:GetChildren()) do
+        if c:IsA("Frame") then c:Destroy() end
+    end
+    local d = nil
+    local e, f = pcall(function() return a:GetCurrentPage() end)
+    if e then d = f else
+        v69.Text = "ERROR"
+        return
+    end
+    if myId ~= v73id then return end
+    
+    if d and #d > 0 then
+        v66.Visible = false
+        local myTAB = vTAB
+        local count = 0
+        for g, h in ipairs(d) do
+            if vTAB ~= myTAB or myId ~= v73id then break end
+            v63(h).Parent = v64
+            count = count + 1
+            if count % 2 == 0 then v9.RenderStepped:Wait() end
+        end
+    else
+        v66.Visible = true
+    end
+    
+    if myId == v73id then
+        v64.CanvasSize = UDim2.new(0, 0, 0, v65.AbsoluteContentSize.Y + 8)
+        v69.Text = tostring(v61) .. " / Enter page"
+        v71()
+    end
+end
+
+local function v74(a)
+    local b = v62(v59)
+    if not b then return nil end
+    for c = 2, a do
+        if b.IsFinished then break end
+        local d, e = pcall(function() b:AdvanceToNextPageAsync() end)
+        if not d then break end
+    end
+    return b
+end
+
+local function v75(a)
+    v59 = a or ""
+    v61 = 1
+    v69.Text = "Loading..."
+    v60 = v62(v59)
+    if v60 then v73(v60) end
+end
+
+v41.MouseButton1Click:Connect(function() v75(v40.Text) end)
+v40.FocusLost:Connect(function(a) if a then v75(v40.Text) end end)
+v42.MouseButton1Click:Connect(function()
+    v58 = v58 % #v57 + 1
+    v42.Text = "Sort: " .. v57[v58][2]
+    v75(v59)
+end)
+
+local function v76()
+    if not v60 or v60.IsFinished then return end
+    local a, b = pcall(function() v60:AdvanceToNextPageAsync() end)
+    if a then
+        v61 += 1
+        v73(v60)
+    else
+        local c = v61 + 1
+        local d = v74(c)
+        if d then
+            v60 = d
+            v61 = math.min(c, v61 + 1)
+            v73(v60)
+        end
+    end
+end
+
+local function v77()
+    if not v60 or v61 <= 1 then return end
+    local a, b = pcall(function() v60:AdvanceToPreviousPageAsync() end)
+    if a then
+        v61 = math.max(1, v61 - 1)
+        v73(v60)
+    else
+        local c = math.max(1, v61 - 1)
+        local d = v74(c)
+        if d then
+            v60 = d
+            v61 = c
+            v73(v60)
+        end
+    end
+end
+
+v68.MouseButton1Click:Connect(v76)
+v67.MouseButton1Click:Connect(v77)
+
+v10.InputBegan:Connect(function(a, b)
+    if b then return end
+    if a.UserInputType == Enum.UserInputType.Keyboard and a.KeyCode == Enum.KeyCode.Right then
+        v76()
+    elseif a.KeyCode == Enum.KeyCode.Left then
+        v77()
+    end
+end)
+
+v69.FocusLost:Connect(function(a)
+    if not a then return end
+    local b = v69.Text:gsub("%s+", "")
+    local c = tonumber(b:match("%d+"))
+    if not c or c < 1 then
+        v70.Text = "Invalid page number"
+        v70.Visible = true
+        task.delay(2, function() if v70 then v70.Visible = false end end)
+        v69.Text = "Page " .. tostring(v61)
+        return
+    end
+    local d = math.floor(c)
+    if d == v61 then
+        v69.Text = "Page " .. tostring(v61)
+        return
+    end
+    v69.Text = "Loading..."
+    local e, f = pcall(function() return v74(d) end)
+    if not e or not f then
+        v70.Text = "Unable to fetch page"
+        v70.Visible = true
+        task.delay(2, function() if v70 then v70.Visible = false end end)
+        v69.Text = "Page " .. tostring(v61)
+        return
+    end
+    v60 = f
+    v61 = math.max(1, d)
+    v73(v60)
+end)
+
+local function v78(a)
+    local b = Instance.new("Frame")
+    b.Size = UDim2.new(0, v4("X", 120), 0, v4("Y", 200))
+    b.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+    b.BackgroundTransparency = 0.2
+    v27(b, 8)
+    v28(b, Color3.fromRGB(60, 60, 90), 1)
+    
+    local c = Instance.new("ImageLabel")
+    c.Size = UDim2.new(1, -v4("X", 10), 0, v4("Y", 90))
+    c.Position = UDim2.new(0, v4("X", 5), 0, v4("Y", 5))
+    c.BackgroundTransparency = 1
+    c.ScaleType = Enum.ScaleType.Fit
+    c.Image = "rbxthumb://type=Asset&id=11768914234&w=150&h=150"
+    c.Parent = b
+    v27(c, 4)
+    
+    local d = Instance.new("TextLabel")
+    d.Size = UDim2.new(1, -v4("X", 10), 0, v4("Y", 28))
+    d.Position = UDim2.new(0, v4("X", 5), 0, v4("Y", 100))
+    d.BackgroundTransparency = 1
+    d.Text = a.Name or "Unknown"
+    d.TextScaled = true
+    d.TextWrapped = true
+    d.Font = Enum.Font.GothamBold
+    d.TextColor3 = Color3.new(1, 1, 1)
+    d.Parent = b
+    
+    local e = Instance.new("TextButton")
+    e.Size = UDim2.new(0.45, -v4("X", 5), 0, v4("Y", 24))
+    e.Position = UDim2.new(0, v4("X", 5), 1, -v4("Y", 29))
+    e.BackgroundColor3 = Color3.fromRGB(40, 140, 80)
+    e.BackgroundTransparency = 0.2
+    e.Text = "Play"
+    e.Font = Enum.Font.GothamBold
+    e.TextScaled = true
+    e.TextColor3 = Color3.new(1, 1, 1)
+    e.Parent = b
+    v27(e, 4)
+    e.MouseButton1Click:Connect(function() v24(a.Id) end)
+    
+    local f = Instance.new("TextButton")
+    f.Size = UDim2.new(0.45, -v4("X", 5), 0, v4("Y", 24))
+    f.Position = UDim2.new(0.55, 0, 1, -v4("Y", 29))
+    f.BackgroundColor3 = Color3.fromRGB(160, 50, 50)
+    f.BackgroundTransparency = 0.2
+    f.Text = "Remove"
+    f.Font = Enum.Font.GothamBold
+    f.TextScaled = true
+    f.TextColor3 = Color3.new(1, 1, 1)
+    f.Parent = b
+    v27(f, 4)
+    
+    local g = Instance.new("TextButton")
+    g.Size = UDim2.new(0, v4("X", 40), 0, v4("Y", 24))
+    g.Position = UDim2.new(0.5, -v4("X", 20), 0, v4("Y", 5))
+    g.BackgroundColor3 = Color3.fromRGB(50, 50, 80)
+    g.BackgroundTransparency = 0.2
+    g.Text = "Copy AnimId"
+    g.Font = Enum.Font.GothamBold
+    g.TextScaled = true
+    g.TextColor3 = Color3.new(1, 1, 1)
+    g.Parent = b
+    v27(g, 4)
+    
+    g.MouseButton1Click:Connect(function()
+        if setclipboard then setclipboard(a.AnimationId:gsub("rbxassetid://", "")) end
+        g.Text = "Copied!"
+        task.wait(0.7)
+        g.Text = "Copy AnimId"
+    end)
+    
+    local h = Instance.new("TextButton")
+    h.Size = UDim2.new(0, v4("X", 24), 0, v4("Y", 24))
+    h.Position = UDim2.new(1, -v4("X", 30), 0, v4("Y", 5))
+    h.Text = a.Favorite and "★" or "☆"
+    h.Font = Enum.Font.GothamBold
+    h.TextScaled = true
+    h.TextColor3 = Color3.fromRGB(255, 220, 50)
+    h.BackgroundTransparency = 1
+    h.Parent = b
+    h.MouseButton1Click:Connect(function()
+        a.Favorite = not a.Favorite
+        h.Text = a.Favorite and "★" or "☆"
+        v22()
+        if v80 then v80() end
+    end)
+    
+    f.MouseButton1Click:Connect(function()
+        for i, j in ipairs(v19) do
+            if j.Id == a.Id then
+                table.remove(v19, i)
+                v22()
+                if v80 then v80() end
+                break
+            end
+        end
+    end)
+    v29(b)
+    return b
+end
+
+local v80id = 0
+function v80()
+    v80id = v80id + 1
+    local myId = v80id
+    for a, b in ipairs(v45:GetChildren()) do
+        if b:IsA("Frame") then b:Destroy() end
+    end
+    local c = (v44.Text or ""):lower()
+    local d = {}
+    for e, f in ipairs(v19) do
+        if c == "" or (f.Name and f.Name:lower():find(c)) then
+            table.insert(d, f)
+        end
+    end
+    table.sort(d, function(g, h)
+        if g.Favorite ~= h.Favorite then
+            return g.Favorite
+        else
+            return false
+        end
+    end)
+    
+    if #d > 0 then
+        v46.Visible = false
+        local myTAB = vTAB
+        local count = 0
+        for i, j in ipairs(d) do
+            if vTAB ~= myTAB or myId ~= v80id then break end
+            v78(j).Parent = v45
+            count = count + 1
+            if count % 25 == 0 then v9.RenderStepped:Wait() end
+        end
+    else
+        v46.Visible = true
+    end
+    if myId == v80id then
+        v45.CanvasSize = UDim2.new(0, 0, 0, v47.AbsoluteContentSize.Y + 8)
+    end
+end
+
+v36.MouseButton1Click:Connect(function()
+    vTAB += 1
+    v39.Visible = true
+    v43.Visible = false
+    v36.BackgroundColor3 = Color3.fromRGB(30, 30, 80)
+    v37.BackgroundColor3 = Color3.fromRGB(20, 50, 20)
+end)
+
+v44:GetPropertyChangedSignal("Text"):Connect(v80)
+v37.MouseButton1Click:Connect(function()
+    vTAB += 1
+    v39.Visible = false
+    v43.Visible = true
+    v36.BackgroundColor3 = Color3.fromRGB(20, 20, 40)
+    v37.BackgroundColor3 = Color3.fromRGB(30, 80, 30)
+    v80()
+end)
+
+v75("")
+local v79 = v26
+local function v81() v79.Enabled = not v79.Enabled end
+local v82 = Instance.new("ScreenGui")
+v82.Name = "ToggleButtonGui"
+v82.ResetOnSpawn = false
+v82.Parent = v25
+v82.Enabled = true
+
+local v83 = Instance.new("TextButton")
+v83.Parent = v82
+v83.Text = "G"
+v83.Font = Enum.Font.GothamSemibold
+v83.TextScaled = true
+v83.Size = UDim2.new(0, 50, 0, 50)
+v83.Position = UDim2.new(0, 20, 0.5, -50)
+v83.AnchorPoint = Vector2.new(0, 0.5)
+v83.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+v83.BackgroundTransparency = 0.2
+v83.TextColor3 = Color3.new(1, 1, 1)
+v83.Active = true
+pcall(function() v83.Draggable = true end)
+v27(v83, 12)
+v28(v83, Color3.fromRGB(60, 60, 100), 2)
+
+local v84 = Instance.new("UIAspectRatioConstraint")
+v84.Parent = v83
+v84.AspectRatio = 1
+v83.MouseButton1Click:Connect(v81)
+
+v10.InputBegan:Connect(function(a, b)
+    if b then return end
+    if a.UserInputType == Enum.UserInputType.Keyboard and a.KeyCode == Enum.KeyCode.G then
+        v81()
+    end
+end)
+v26.Enabled = true
+if v80 then v80() end
+
+task.spawn(function()
+    local RunService = game:GetService("RunService")
+    local Players = game.Players
+    local player = Players.LocalPlayer
+
+    local function setupCollision(character)
+        local hrp = character:WaitForChild("HumanoidRootPart")
+        local bodyParts = {}
+
+        hrp.CanCollide = true
+
+        local function addPart(part)
+            if part:IsA("BasePart") and part ~= hrp then
+                table.insert(bodyParts, part)
+            end
+        end
+
+        for _, part in pairs(character:GetDescendants()) do
+            addPart(part)
+        end
+
+        local descendantConnection = character.DescendantAdded:Connect(addPart)
+
+        local heartbeatConnection
+        heartbeatConnection = RunService.Heartbeat:Connect(function()
+            if not character or not character.Parent then
+                heartbeatConnection:Disconnect()
+                descendantConnection:Disconnect()
+                return
+            end
+
+            for i = 1, #bodyParts do
+                local p = bodyParts[i]
+                if p and p.Parent then
+                    p.CanCollide = false
+                end
+            end
+        end)
+    end
+
+    if player.Character then
+        setupCollision(player.Character)
+    end
+
+    player.CharacterAdded:Connect(setupCollision)
+end)
