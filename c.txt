@@ -1,0 +1,800 @@
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
+
+local LocalPlayer = Players.LocalPlayer
+local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
+local Camera = workspace.CurrentCamera
+
+local Settings = {
+    ESPEnabled = true,
+    TeamCheck = false,
+    TeamColor = true,
+    MaxDistance = 1000,
+    CornerLength = 0.28,
+    BoxThickness = 1.5,
+    DefaultColor = Color3.fromRGB(255, 255, 255),
+    TextColor = Color3.fromRGB(245, 245, 250),
+    HealthColor = true
+}
+
+local OldGui = PlayerGui:FindFirstChild("CelvynESP")
+if OldGui then
+    OldGui:Destroy()
+end
+
+local ESPObjects = {}
+
+local function CreateLine()
+    local Line = Drawing.new("Line")
+    Line.Thickness = Settings.BoxThickness
+    Line.Transparency = 1
+    Line.Visible = false
+    return Line
+end
+
+local function CreateESP(Player)
+    if ESPObjects[Player] then
+        return
+    end
+
+    local Data = {
+        Lines = {},
+        HealthBar = CreateLine(),
+        HealthBackground = CreateLine(),
+        Username = Drawing.new("Text"),
+        Distance = Drawing.new("Text"),
+        HealthText = Drawing.new("Text")
+    }
+
+    for i = 1, 8 do
+        Data.Lines[i] = CreateLine()
+    end
+
+    Data.Username.Size = 13
+    Data.Username.Center = true
+    Data.Username.Outline = true
+    Data.Username.OutlineColor = Color3.fromRGB(0, 0, 0)
+    Data.Username.Color = Settings.TextColor
+    Data.Username.Visible = false
+
+    Data.Distance.Size = 12
+    Data.Distance.Center = true
+    Data.Distance.Outline = true
+    Data.Distance.OutlineColor = Color3.fromRGB(0, 0, 0)
+    Data.Distance.Color = Settings.TextColor
+    Data.Distance.Visible = false
+
+    Data.HealthText.Size = 12
+    Data.HealthText.Center = true
+    Data.HealthText.Outline = true
+    Data.HealthText.OutlineColor = Color3.fromRGB(0, 0, 0)
+    Data.HealthText.Color = Settings.TextColor
+    Data.HealthText.Visible = false
+
+    ESPObjects[Player] = Data
+end
+
+local function HideESP(Data)
+    for _, Line in ipairs(Data.Lines) do
+        Line.Visible = false
+    end
+
+    Data.HealthBar.Visible = false
+    Data.HealthBackground.Visible = false
+    Data.Username.Visible = false
+    Data.Distance.Visible = false
+    Data.HealthText.Visible = false
+end
+
+local function RemoveESP(Player)
+    local Data = ESPObjects[Player]
+
+    if not Data then
+        return
+    end
+
+    for _, Line in ipairs(Data.Lines) do
+        pcall(function()
+            Line:Remove()
+        end)
+    end
+
+    pcall(function()
+        Data.HealthBar:Remove()
+        Data.HealthBackground:Remove()
+        Data.Username:Remove()
+        Data.Distance:Remove()
+        Data.HealthText:Remove()
+    end)
+
+    ESPObjects[Player] = nil
+end
+
+local function GetPlayerColor(Player)
+    if Settings.TeamColor and Player.TeamColor then
+        return Player.TeamColor.Color
+    end
+
+    return Settings.DefaultColor
+end
+
+local function GetBoundingBox(Character)
+    local Parts = {}
+
+    for _, Object in ipairs(Character:GetChildren()) do
+        if Object:IsA("BasePart") then
+            table.insert(Parts, Object)
+        end
+    end
+
+    if #Parts == 0 then
+        return nil
+    end
+
+    local MinX = math.huge
+    local MinY = math.huge
+    local MaxX = -math.huge
+    local MaxY = -math.huge
+    local Visible = false
+
+    for _, Part in ipairs(Parts) do
+        local Size = Part.Size
+        local CF = Part.CFrame
+
+        local Corners = {
+            CF * Vector3.new(-Size.X / 2, -Size.Y / 2, -Size.Z / 2),
+            CF * Vector3.new(-Size.X / 2, -Size.Y / 2, Size.Z / 2),
+            CF * Vector3.new(-Size.X / 2, Size.Y / 2, -Size.Z / 2),
+            CF * Vector3.new(-Size.X / 2, Size.Y / 2, Size.Z / 2),
+            CF * Vector3.new(Size.X / 2, -Size.Y / 2, -Size.Z / 2),
+            CF * Vector3.new(Size.X / 2, -Size.Y / 2, Size.Z / 2),
+            CF * Vector3.new(Size.X / 2, Size.Y / 2, -Size.Z / 2),
+            CF * Vector3.new(Size.X / 2, Size.Y / 2, Size.Z / 2)
+        }
+
+        for _, Corner in ipairs(Corners) do
+            local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Corner)
+
+            if OnScreen and ScreenPosition.Z > 0 then
+                Visible = true
+            end
+
+            if ScreenPosition.Z > 0 then
+                MinX = math.min(MinX, ScreenPosition.X)
+                MinY = math.min(MinY, ScreenPosition.Y)
+                MaxX = math.max(MaxX, ScreenPosition.X)
+                MaxY = math.max(MaxY, ScreenPosition.Y)
+            end
+        end
+    end
+
+    if not Visible or MinX == math.huge then
+        return nil
+    end
+
+    return MinX, MinY, MaxX, MaxY
+end
+
+local function UpdateCornerBox(Data, X, Y, Width, Height, Color)
+    local CX = X + Width
+    local CY = Y + Height
+
+    local Horizontal = math.max(Width * Settings.CornerLength, 8)
+    local Vertical = math.max(Height * Settings.CornerLength, 8)
+
+    local Lines = Data.Lines
+
+    Lines[1].From = Vector2.new(X, Y)
+    Lines[1].To = Vector2.new(X + Horizontal, Y)
+
+    Lines[2].From = Vector2.new(X, Y)
+    Lines[2].To = Vector2.new(X, Y + Vertical)
+
+    Lines[3].From = Vector2.new(CX, Y)
+    Lines[3].To = Vector2.new(CX - Horizontal, Y)
+
+    Lines[4].From = Vector2.new(CX, Y)
+    Lines[4].To = Vector2.new(CX, Y + Vertical)
+
+    Lines[5].From = Vector2.new(X, CY)
+    Lines[5].To = Vector2.new(X + Horizontal, CY)
+
+    Lines[6].From = Vector2.new(X, CY)
+    Lines[6].To = Vector2.new(X, CY - Vertical)
+
+    Lines[7].From = Vector2.new(CX, CY)
+    Lines[7].To = Vector2.new(CX - Horizontal, CY)
+
+    Lines[8].From = Vector2.new(CX, CY)
+    Lines[8].To = Vector2.new(CX, CY - Vertical)
+
+    for _, Line in ipairs(Lines) do
+        Line.Color = Color
+        Line.Thickness = Settings.BoxThickness
+        Line.Visible = true
+    end
+end
+
+local function UpdatePlayerESP(Player, Data)
+    if not Settings.ESPEnabled or Player == LocalPlayer then
+        HideESP(Data)
+        return
+    end
+
+    if Settings.TeamCheck and LocalPlayer.Team and Player.Team == LocalPlayer.Team then
+        HideESP(Data)
+        return
+    end
+
+    local Character = Player.Character
+
+    if not Character then
+        HideESP(Data)
+        return
+    end
+
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    local Root = Character:FindFirstChild("HumanoidRootPart")
+
+    if not Humanoid or not Root or Humanoid.Health <= 0 then
+        HideESP(Data)
+        return
+    end
+
+    local LocalCharacter = LocalPlayer.Character
+    local LocalRoot = LocalCharacter and LocalCharacter:FindFirstChild("HumanoidRootPart")
+
+    if not LocalRoot then
+        HideESP(Data)
+        return
+    end
+
+    local Distance = (Root.Position - LocalRoot.Position).Magnitude
+
+    if Distance > Settings.MaxDistance then
+        HideESP(Data)
+        return
+    end
+
+    local X1, Y1, X2, Y2 = GetBoundingBox(Character)
+
+    if not X1 then
+        HideESP(Data)
+        return
+    end
+
+    local Width = X2 - X1
+    local Height = Y2 - Y1
+
+    if Width <= 1 or Height <= 1 then
+        HideESP(Data)
+        return
+    end
+
+    local Color = GetPlayerColor(Player)
+
+    UpdateCornerBox(Data, X1, Y1, Width, Height, Color)
+
+    local HealthPercent = math.clamp(
+        Humanoid.Health / math.max(Humanoid.MaxHealth, 1),
+        0,
+        1
+    )
+
+    local HealthHeight = Height * HealthPercent
+
+    Data.HealthBackground.From = Vector2.new(X1 - 6, Y1)
+    Data.HealthBackground.To = Vector2.new(X1 - 6, Y2)
+    Data.HealthBackground.Color = Color3.fromRGB(30, 30, 35)
+    Data.HealthBackground.Thickness = 4
+    Data.HealthBackground.Visible = true
+
+    Data.HealthBar.From = Vector2.new(X1 - 6, Y2)
+    Data.HealthBar.To = Vector2.new(X1 - 6, Y2 - HealthHeight)
+    Data.HealthBar.Color = Settings.HealthColor and Color3.fromRGB(
+        math.floor(255 * (1 - HealthPercent)),
+        math.floor(255 * HealthPercent),
+        60
+    ) or Color3.fromRGB(100, 255, 150)
+    Data.HealthBar.Thickness = 2
+    Data.HealthBar.Visible = true
+
+    Data.Username.Text = Player.DisplayName .. "  @" .. Player.Name
+    Data.Username.Position = Vector2.new(X1 + Width / 2, Y1 - 18)
+    Data.Username.Visible = true
+
+    Data.Distance.Text = string.format("%dm", math.floor(Distance))
+    Data.Distance.Position = Vector2.new(X1 + Width / 2, Y2 + 5)
+    Data.Distance.Visible = true
+
+    Data.HealthText.Text = string.format("%d%%", math.floor(HealthPercent * 100))
+    Data.HealthText.Position = Vector2.new(X1 - 28, Y1 + Height / 2)
+    Data.HealthText.Visible = true
+end
+
+for _, Player in ipairs(Players:GetPlayers()) do
+    if Player ~= LocalPlayer then
+        CreateESP(Player)
+    end
+end
+
+Players.PlayerAdded:Connect(function(Player)
+    CreateESP(Player)
+end)
+
+Players.PlayerRemoving:Connect(function(Player)
+    RemoveESP(Player)
+end)
+
+
+local HubGui = Instance.new("ScreenGui")
+HubGui.Name = "CelvynHub"
+HubGui.ResetOnSpawn = false
+HubGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+HubGui.Parent = PlayerGui
+
+local function Corner(o,r)
+    local c=Instance.new("UICorner")
+    c.CornerRadius=UDim.new(0,r)
+    c.Parent=o
+end
+
+local function Stroke(o,t)
+    local s=Instance.new("UIStroke")
+    s.Color=Color3.fromRGB(255,255,255)
+    s.Transparency=t or .88
+    s.Thickness=1
+    s.Parent=o
+end
+
+local function MakeLabel(parent,text,size,pos,font,textSize,color)
+    local l=Instance.new("TextLabel")
+    l.BackgroundTransparency=1
+    l.Size=size
+    l.Position=pos
+    l.Text=text
+    l.Font=font or Enum.Font.Gotham
+    l.TextSize=textSize or 12
+    l.TextColor3=color or Color3.fromRGB(225,225,232)
+    l.TextXAlignment=Enum.TextXAlignment.Left
+    l.Parent=parent
+    return l
+end
+
+local Main=Instance.new("Frame")
+Main.Size=UDim2.new(0,590,0,440)
+Main.Position=UDim2.new(.5,-295,.5,-220)
+Main.BackgroundColor3=Color3.fromRGB(9,9,13)
+Main.BackgroundTransparency=.08
+Main.BorderSizePixel=0
+Main.Parent=HubGui
+Corner(Main,20)
+Stroke(Main,.80)
+
+local Glass=Instance.new("Frame")
+Glass.Size=UDim2.new(1,-2,1,-2)
+Glass.Position=UDim2.new(0,1,0,1)
+Glass.BackgroundColor3=Color3.fromRGB(34,34,43)
+Glass.BackgroundTransparency=.43
+Glass.BorderSizePixel=0
+Glass.Parent=Main
+Corner(Glass,19)
+
+local Header=Instance.new("Frame")
+Header.Size=UDim2.new(1,0,0,70)
+Header.BackgroundTransparency=1
+Header.Parent=Main
+MakeLabel(Header,"Celvyn Hub",UDim2.new(1,-120,0,29),UDim2.new(0,21,0,8),Enum.Font.GothamBold,22,Color3.fromRGB(248,248,252))
+MakeLabel(Header,"Combat • Player • Visuals",UDim2.new(1,-120,0,18),UDim2.new(0,21,0,39),Enum.Font.Gotham,11,Color3.fromRGB(145,145,157))
+
+local Close=Instance.new("TextButton")
+Close.Size=UDim2.new(0,35,0,35)
+Close.Position=UDim2.new(1,-50,0,16)
+Close.BackgroundColor3=Color3.fromRGB(150,48,56)
+Close.BackgroundTransparency=.12
+Close.BorderSizePixel=0
+Close.Text="×"
+Close.TextColor3=Color3.fromRGB(255,255,255)
+Close.Font=Enum.Font.GothamBold
+Close.TextSize=22
+Close.AutoButtonColor=false
+Close.Parent=Header
+Corner(Close,11)
+
+local Sidebar=Instance.new("Frame")
+Sidebar.Size=UDim2.new(0,150,1,-86)
+Sidebar.Position=UDim2.new(0,12,0,74)
+Sidebar.BackgroundColor3=Color3.fromRGB(17,17,22)
+Sidebar.BackgroundTransparency=.22
+Sidebar.BorderSizePixel=0
+Sidebar.Parent=Main
+Corner(Sidebar,14)
+Stroke(Sidebar,.94)
+
+local Content=Instance.new("Frame")
+Content.Size=UDim2.new(1,-174,1,-86)
+Content.Position=UDim2.new(0,162,0,74)
+Content.BackgroundColor3=Color3.fromRGB(17,17,22)
+Content.BackgroundTransparency=.22
+Content.BorderSizePixel=0
+Content.Parent=Main
+Corner(Content,14)
+Stroke(Content,.94)
+
+local Pages={}
+local Tabs={}
+
+local function Page(name)
+    local p=Instance.new("ScrollingFrame")
+    p.Name=name
+    p.Size=UDim2.new(1,-20,1,-20)
+    p.Position=UDim2.new(0,10,0,10)
+    p.BackgroundTransparency=1
+    p.BorderSizePixel=0
+    p.ScrollBarThickness=3
+    p.ScrollBarImageColor3=Color3.fromRGB(105,105,115)
+    p.Visible=false
+    p.Parent=Content
+    local list=Instance.new("UIListLayout")
+    list.Padding=UDim.new(0,8)
+    list.SortOrder=Enum.SortOrder.LayoutOrder
+    list.Parent=p
+    list:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        p.CanvasSize=UDim2.new(0,0,0,list.AbsoluteContentSize.Y+12)
+    end)
+    Pages[name]=p
+    return p
+end
+
+local function Tab(name,icon,order)
+    local b=Instance.new("TextButton")
+    b.Size=UDim2.new(1,-16,0,47)
+    b.Position=UDim2.new(0,8,0,8+(order-1)*54)
+    b.BackgroundColor3=Color3.fromRGB(38,38,47)
+    b.BackgroundTransparency=.45
+    b.BorderSizePixel=0
+    b.Text="   "..icon.."   "..name
+    b.TextColor3=Color3.fromRGB(180,180,192)
+    b.Font=Enum.Font.GothamMedium
+    b.TextSize=12
+    b.TextXAlignment=Enum.TextXAlignment.Left
+    b.AutoButtonColor=false
+    b.Parent=Sidebar
+    Corner(b,11)
+    Tabs[name]=b
+    return b
+end
+
+local function Show(name)
+    for n,p in pairs(Pages) do p.Visible=n==name end
+    for n,b in pairs(Tabs) do
+        local active=n==name
+        b.BackgroundColor3=active and Color3.fromRGB(67,67,80) or Color3.fromRGB(38,38,47)
+        b.TextColor3=active and Color3.fromRGB(248,248,252) or Color3.fromRGB(180,180,192)
+    end
+end
+
+local function Section(page,title)
+    local l=MakeLabel(page,title,UDim2.new(1,-4,0,24),UDim2.new(),Enum.Font.GothamBold,10,Color3.fromRGB(128,128,142))
+    l.LayoutOrder=#page:GetChildren()
+end
+
+local function Toggle(page,title,get,set)
+    local b=Instance.new("TextButton")
+    b.Size=UDim2.new(1,-4,0,45)
+    b.BackgroundColor3=Color3.fromRGB(43,43,52)
+    b.BackgroundTransparency=.10
+    b.BorderSizePixel=0
+    b.Font=Enum.Font.GothamMedium
+    b.TextSize=12
+    b.TextXAlignment=Enum.TextXAlignment.Left
+    b.AutoButtonColor=false
+    b.LayoutOrder=#page:GetChildren()
+    b.Parent=page
+    Corner(b,11)
+    Stroke(b,.94)
+    local function refresh()
+        local on=get()
+        b.Text="   "..title.."                                      "..(on and "ON" or "OFF")
+        b.TextColor3=on and Color3.fromRGB(225,255,236) or Color3.fromRGB(190,190,200)
+        b.BackgroundColor3=on and Color3.fromRGB(39,77,57) or Color3.fromRGB(43,43,52)
+    end
+    b.MouseButton1Click:Connect(function() set(not get()); refresh() end)
+    refresh()
+end
+
+local function Slider(page,title,min,max,step,get,set,fmt)
+    local h=Instance.new("Frame")
+    h.Size=UDim2.new(1,-4,0,67)
+    h.BackgroundTransparency=1
+    h.LayoutOrder=#page:GetChildren()
+    h.Parent=page
+    local label=MakeLabel(h,"",UDim2.new(1,0,0,20),UDim2.new(),Enum.Font.GothamMedium,12,Color3.fromRGB(225,225,232))
+    local bar=Instance.new("Frame")
+    bar.Size=UDim2.new(1,-8,0,7)
+    bar.Position=UDim2.new(0,4,0,38)
+    bar.BackgroundColor3=Color3.fromRGB(53,53,63)
+    bar.BorderSizePixel=0
+    bar.Parent=h
+    Corner(bar,4)
+    local fill=Instance.new("Frame")
+    fill.BackgroundColor3=Color3.fromRGB(165,165,180)
+    fill.BorderSizePixel=0
+    fill.Parent=bar
+    Corner(fill,4)
+    local knob=Instance.new("Frame")
+    knob.Size=UDim2.new(0,14,0,14)
+    knob.AnchorPoint=Vector2.new(.5,.5)
+    knob.BackgroundColor3=Color3.fromRGB(242,242,247)
+    knob.BorderSizePixel=0
+    knob.Parent=bar
+    Corner(knob,7)
+    local dragging=false
+    local function refresh()
+        local v=get()
+        local p=math.clamp((v-min)/(max-min),0,1)
+        label.Text=title.."   •   "..(fmt and fmt(v) or tostring(v))
+        fill.Size=UDim2.new(p,0,1,0)
+        knob.Position=UDim2.new(p,0,.5,0)
+    end
+    local function update(input)
+        local p=math.clamp((input.Position.X-bar.AbsolutePosition.X)/bar.AbsoluteSize.X,0,1)
+        local v=math.floor((min+(max-min)*p)/step+.5)*step
+        set(math.clamp(v,min,max))
+        refresh()
+    end
+    bar.InputBegan:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=true; update(input) end
+    end)
+    UserInputService.InputChanged:Connect(function(input)
+        if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then update(input) end
+    end)
+    UserInputService.InputEnded:Connect(function(input)
+        if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=false end
+    end)
+    refresh()
+end
+
+local Combat=Page("Combat")
+local PlayerPage=Page("Player")
+local Visuals=Page("Visuals")
+local SettingsPage=Page("Settings")
+local About=Page("About")
+
+Tab("Combat","◉",1).MouseButton1Click:Connect(function() Show("Combat") end)
+Tab("Player","◆",2).MouseButton1Click:Connect(function() Show("Player") end)
+Tab("Visuals","□",3).MouseButton1Click:Connect(function() Show("Visuals") end)
+Tab("Settings","⚙",4).MouseButton1Click:Connect(function() Show("Settings") end)
+Tab("About","i",5).MouseButton1Click:Connect(function() Show("About") end)
+
+local AimbotEnabled=false
+local AimbotTeamCheck=false
+local AimbotFOV=100
+local AimbotSmoothness=1
+local AimbotTarget=nil
+local FOVCircle=Drawing.new("Circle")
+FOVCircle.Visible=false
+FOVCircle.Filled=false
+FOVCircle.Thickness=1.5
+FOVCircle.Color=Color3.fromRGB(180,180,195)
+
+local function Alive(p)
+    local c=p and p.Character
+    local h=c and c:FindFirstChildOfClass("Humanoid")
+    return h and h.Health>0
+end
+
+local function ClosestTarget()
+    local best,bestDistance=nil,math.huge
+    local center=Camera.ViewportSize/2
+    for _,p in ipairs(Players:GetPlayers()) do
+        if p~=LocalPlayer and Alive(p) and (not AimbotTeamCheck or p.Team~=LocalPlayer.Team) then
+            local head=p.Character:FindFirstChild("Head")
+            if head then
+                local pos,visible=Camera:WorldToViewportPoint(head.Position)
+                if visible and pos.Z>0 then
+                    local d=(Vector2.new(pos.X,pos.Y)-center).Magnitude
+                    if d<=AimbotFOV and d<bestDistance then best,bestDistance=p,d end
+                end
+            end
+        end
+    end
+    return best
+end
+
+Section(Combat,"AIM ASSIST")
+Toggle(Combat,"Aimbot",function() return AimbotEnabled end,function(v) AimbotEnabled=v if not v then AimbotTarget=nil end end)
+Toggle(Combat,"Target Team Check",function() return AimbotTeamCheck end,function(v) AimbotTeamCheck=v AimbotTarget=nil end)
+Slider(Combat,"Aim FOV",25,400,5,function() return AimbotFOV end,function(v) AimbotFOV=v end,function(v) return v.." px" end)
+Slider(Combat,"Aim Smoothness",1,20,1,function() return AimbotSmoothness end,function(v) AimbotSmoothness=v end,function(v) return tostring(v) end)
+
+local TPWalkEnabled=false
+local TPWalkSpeed=1
+Section(PlayerPage,"MOVEMENT")
+Toggle(PlayerPage,"TP Walk",function() return TPWalkEnabled end,function(v) TPWalkEnabled=v end)
+Slider(PlayerPage,"TP Walk Speed",0,20,.5,function() return TPWalkSpeed end,function(v) TPWalkSpeed=v end,function(v) return string.format("%.1f",v) end)
+
+local TargetBox=Instance.new("TextBox")
+TargetBox.Size=UDim2.new(1,-4,0,45)
+TargetBox.BackgroundColor3=Color3.fromRGB(43,43,52)
+TargetBox.BackgroundTransparency=.10
+TargetBox.BorderSizePixel=0
+TargetBox.PlaceholderText="  Username or display name"
+TargetBox.PlaceholderColor3=Color3.fromRGB(125,125,138)
+TargetBox.Text=""
+TargetBox.TextColor3=Color3.fromRGB(240,240,245)
+TargetBox.Font=Enum.Font.Gotham
+TargetBox.TextSize=12
+TargetBox.ClearTextOnFocus=false
+TargetBox.LayoutOrder=#PlayerPage:GetChildren()
+TargetBox.Parent=PlayerPage
+Corner(TargetBox,11)
+Stroke(TargetBox,.94)
+
+local TPButton=Instance.new("TextButton")
+TPButton.Size=UDim2.new(1,-4,0,45)
+TPButton.BackgroundColor3=Color3.fromRGB(58,65,76)
+TPButton.BorderSizePixel=0
+TPButton.Text="   Teleport to Player"
+TPButton.TextColor3=Color3.fromRGB(245,245,250)
+TPButton.Font=Enum.Font.GothamMedium
+TPButton.TextSize=12
+TPButton.TextXAlignment=Enum.TextXAlignment.Left
+TPButton.AutoButtonColor=false
+TPButton.LayoutOrder=#PlayerPage:GetChildren()
+TPButton.Parent=PlayerPage
+Corner(TPButton,11)
+Stroke(TPButton,.92)
+
+local function FindPlayer(input)
+    input=input:gsub("^%s*(.-)%s*$",""):lower()
+    if input=="" then return nil end
+    for _,p in ipairs(Players:GetPlayers()) do if p~=LocalPlayer and p.Name:lower()==input then return p end end
+    for _,p in ipairs(Players:GetPlayers()) do if p~=LocalPlayer and p.DisplayName:lower()==input then return p end end
+    for _,p in ipairs(Players:GetPlayers()) do if p~=LocalPlayer and p.Name:lower():sub(1,#input)==input then return p end end
+    for _,p in ipairs(Players:GetPlayers()) do if p~=LocalPlayer and p.DisplayName:lower():sub(1,#input)==input then return p end end
+end
+
+TPButton.MouseButton1Click:Connect(function()
+    local p=FindPlayer(TargetBox.Text)
+    local c=LocalPlayer.Character
+    local tc=p and p.Character
+    local r=c and c:FindFirstChild("HumanoidRootPart")
+    local tr=tc and tc:FindFirstChild("HumanoidRootPart")
+    if r and tr then
+        c:PivotTo(tr.CFrame)
+        TPButton.Text="   Teleported to @"..p.Name
+    else
+        TPButton.Text="   Player not found"
+    end
+    task.delay(1.4,function() if TPButton.Parent then TPButton.Text="   Teleport to Player" end end)
+end)
+
+Section(Visuals,"ESP")
+Toggle(Visuals,"Corner ESP",function() return Settings.ESPEnabled end,function(v) Settings.ESPEnabled=v end)
+Toggle(Visuals,"Team Check",function() return Settings.TeamCheck end,function(v) Settings.TeamCheck=v end)
+Toggle(Visuals,"Team Colors",function() return Settings.TeamColor end,function(v) Settings.TeamColor=v end)
+Toggle(Visuals,"Health Colors",function() return Settings.HealthColor end,function(v) Settings.HealthColor=v end)
+Slider(Visuals,"Max Distance",100,5000,50,function() return Settings.MaxDistance end,function(v) Settings.MaxDistance=v end,function(v) return v.." m" end)
+
+Section(SettingsPage,"ESP APPEARANCE")
+Slider(SettingsPage,"Corner Size",8,35,1,function() return math.floor(Settings.CornerLength*100) end,function(v) Settings.CornerLength=v/100 end,function(v) return v.."%" end)
+Slider(SettingsPage,"Line Thickness",1,4,1,function() return math.floor(Settings.BoxThickness) end,function(v) Settings.BoxThickness=v end,function(v) return v.." px" end)
+
+local Reset=Instance.new("TextButton")
+Reset.Size=UDim2.new(1,-4,0,45)
+Reset.BackgroundColor3=Color3.fromRGB(55,55,64)
+Reset.BorderSizePixel=0
+Reset.Text="   Restore Default Settings"
+Reset.TextColor3=Color3.fromRGB(235,235,240)
+Reset.Font=Enum.Font.GothamMedium
+Reset.TextSize=12
+Reset.TextXAlignment=Enum.TextXAlignment.Left
+Reset.AutoButtonColor=false
+Reset.LayoutOrder=#SettingsPage:GetChildren()
+Reset.Parent=SettingsPage
+Corner(Reset,11)
+Reset.MouseButton1Click:Connect(function()
+    Settings.ESPEnabled=true
+    Settings.TeamCheck=false
+    Settings.TeamColor=true
+    Settings.MaxDistance=1000
+    Settings.CornerLength=.16
+    Settings.BoxThickness=1.5
+    Settings.HealthColor=true
+    AimbotEnabled=false
+    AimbotTeamCheck=false
+    AimbotFOV=100
+    AimbotSmoothness=1
+    TPWalkEnabled=false
+    TPWalkSpeed=1
+end)
+
+Section(About,"CELVYN HUB")
+local Info=MakeLabel(About,"Unified Combat, Player and Visual controls.\n\nCombat: Aimbot, FOV and smoothness.\nPlayer: TP Walk and player teleport.\nVisuals: corner ESP, health, distance and team filters.\n\nMouse and touch controls supported.",UDim2.new(1,-4,0,155),UDim2.new(),Enum.Font.Gotham,12,Color3.fromRGB(205,205,216))
+Info.TextWrapped=true
+Info.TextYAlignment=Enum.TextYAlignment.Top
+Info.LayoutOrder=#About:GetChildren()
+
+local Open=Instance.new("TextButton")
+Open.Size=UDim2.new(0,105,0,44)
+Open.Position=UDim2.new(0,18,.5,-22)
+Open.BackgroundColor3=Color3.fromRGB(18,18,23)
+Open.BackgroundTransparency=.08
+Open.BorderSizePixel=0
+Open.Text="OPEN HUB"
+Open.TextColor3=Color3.fromRGB(245,245,250)
+Open.Font=Enum.Font.GothamBold
+Open.TextSize=12
+Open.AutoButtonColor=false
+Open.Visible=false
+Open.Parent=HubGui
+Corner(Open,12)
+Stroke(Open,.72)
+
+Close.MouseButton1Click:Connect(function() Main.Visible=false Open.Visible=true end)
+Open.MouseButton1Click:Connect(function() Main.Visible=true Open.Visible=false end)
+
+local dragging=false
+local dragStart
+local startPos
+Header.InputBegan:Connect(function(input)
+    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then
+        dragging=true
+        dragStart=input.Position
+        startPos=Main.Position
+    end
+end)
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType==Enum.UserInputType.MouseMovement or input.UserInputType==Enum.UserInputType.Touch) then
+        local d=input.Position-dragStart
+        Main.Position=UDim2.new(startPos.X.Scale,startPos.X.Offset+d.X,startPos.Y.Scale,startPos.Y.Offset+d.Y)
+    end
+end)
+UserInputService.InputEnded:Connect(function(input)
+    if input.UserInputType==Enum.UserInputType.MouseButton1 or input.UserInputType==Enum.UserInputType.Touch then dragging=false end
+end)
+
+RunService.RenderStepped:Connect(function()
+    Camera=workspace.CurrentCamera
+    if Camera then
+        FOVCircle.Position=Camera.ViewportSize/2
+        FOVCircle.Radius=AimbotFOV
+        FOVCircle.Visible=AimbotEnabled
+        if AimbotEnabled then
+            if not AimbotTarget or not Alive(AimbotTarget) then AimbotTarget=ClosestTarget() end
+            if AimbotTarget and AimbotTarget.Character then
+                local head=AimbotTarget.Character:FindFirstChild("Head")
+                if head then
+                    local goal=CFrame.new(Camera.CFrame.Position,head.Position)
+                    Camera.CFrame=Camera.CFrame:Lerp(goal,1/math.max(AimbotSmoothness,1))
+                end
+            end
+        end
+    end
+end)
+
+RunService.Heartbeat:Connect(function(dt)
+    if not TPWalkEnabled then return end
+    local c=LocalPlayer.Character
+    local h=c and c:FindFirstChildOfClass("Humanoid")
+    local r=c and c:FindFirstChild("HumanoidRootPart")
+    if h and r and h.MoveDirection.Magnitude>0 then
+        c:PivotTo(r.CFrame+h.MoveDirection*dt*TPWalkSpeed*10)
+    end
+end)
+
+Show("Combat")
+
+RunService.RenderStepped:Connect(function()
+    Camera=workspace.CurrentCamera
+    if not Camera then return end
+    for Player,Data in pairs(ESPObjects) do
+        if Player.Parent~=Players then
+            RemoveESP(Player)
+        else
+            UpdatePlayerESP(Player,Data)
+        end
+    end
+end)
