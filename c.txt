@@ -22,11 +22,18 @@ if _G.CelvynCleanup then
     pcall(_G.CelvynCleanup)
 end
 local Connections = {}
+local TouchFlingConnection = nil
 local DrawingsList = {}
 local ESPObjects = {}
 local ControlRegistry = {}
 
 _G.CelvynCleanup = function()
+    TouchFlingEnabled = false
+    if TouchFlingConnection then
+        pcall(function() TouchFlingConnection:Disconnect() end)
+        TouchFlingConnection = nil
+    end
+
     for _, Connection in ipairs(Connections) do
         pcall(function() Connection:Disconnect() end)
     end
@@ -139,43 +146,75 @@ local function GetPlayerColor(Player)
 end
 
 local function GetBoundingBox(Character)
-    local Parts = {}
-    for _, Object in ipairs(Character:GetChildren()) do
-        if Object:IsA("BasePart") then
-            table.insert(Parts, Object)
-        end
+    if not Character or not Character.Parent or not Camera then
+        return nil
     end
-    if #Parts == 0 then return nil end
+
+    -- Use the model's world bounding box instead of projecting every limb
+    -- independently. This prevents a single off-screen/rotated limb from
+    -- stretching the corner box across the screen.
+    local Ok, BoxCF, BoxSize = pcall(function()
+        return Character:GetBoundingBox()
+    end)
+
+    if not Ok or not BoxCF or not BoxSize then
+        return nil
+    end
+
+    local Half = BoxSize * 0.5
     local MinX, MinY = math.huge, math.huge
     local MaxX, MaxY = -math.huge, -math.huge
-    local Visible = false
-    for _, Part in ipairs(Parts) do
-        local Size = Part.Size
-        local CF = Part.CFrame
-        local Corners = {
-            CF * Vector3.new(-Size.X / 2, -Size.Y / 2, -Size.Z / 2),
-            CF * Vector3.new(-Size.X / 2, -Size.Y / 2, Size.Z / 2),
-            CF * Vector3.new(-Size.X / 2, Size.Y / 2, -Size.Z / 2),
-            CF * Vector3.new(-Size.X / 2, Size.Y / 2, Size.Z / 2),
-            CF * Vector3.new(Size.X / 2, -Size.Y / 2, -Size.Z / 2),
-            CF * Vector3.new(Size.X / 2, -Size.Y / 2, Size.Z / 2),
-            CF * Vector3.new(Size.X / 2, Size.Y / 2, -Size.Z / 2),
-            CF * Vector3.new(Size.X / 2, Size.Y / 2, Size.Z / 2),
-        }
-        for _, Corner in ipairs(Corners) do
-            local ScreenPosition, OnScreen = Camera:WorldToViewportPoint(Corner)
-            if OnScreen and ScreenPosition.Z > 0 then
-                Visible = true
-            end
-            if ScreenPosition.Z > 0 then
-                MinX = math.min(MinX, ScreenPosition.X)
-                MinY = math.min(MinY, ScreenPosition.Y)
-                MaxX = math.max(MaxX, ScreenPosition.X)
-                MaxY = math.max(MaxY, ScreenPosition.Y)
+    local HasFrontPoint = false
+    local HasScreenPoint = false
+    local Viewport = Camera.ViewportSize
+
+    for X = -1, 1, 2 do
+        for Y = -1, 1, 2 do
+            for Z = -1, 1, 2 do
+                local WorldPoint = BoxCF:PointToWorldSpace(Vector3.new(
+                    Half.X * X,
+                    Half.Y * Y,
+                    Half.Z * Z
+                ))
+
+                local ScreenPosition = Camera:WorldToViewportPoint(WorldPoint)
+                if ScreenPosition.Z > 0.05 then
+                    HasFrontPoint = true
+
+                    -- Clamp projected points so partially off-screen
+                    -- characters cannot create giant invalid boxes.
+                    local SX = math.clamp(ScreenPosition.X, 0, Viewport.X)
+                    local SY = math.clamp(ScreenPosition.Y, 0, Viewport.Y)
+
+                    MinX = math.min(MinX, SX)
+                    MinY = math.min(MinY, SY)
+                    MaxX = math.max(MaxX, SX)
+                    MaxY = math.max(MaxY, SY)
+
+                    if ScreenPosition.X >= 0 and ScreenPosition.X <= Viewport.X
+                        and ScreenPosition.Y >= 0 and ScreenPosition.Y <= Viewport.Y then
+                        HasScreenPoint = true
+                    end
+                end
             end
         end
     end
-    if not Visible or MinX == math.huge then return nil end
+
+    if not HasFrontPoint or not HasScreenPoint or MinX == math.huge then
+        return nil
+    end
+
+    local Width = MaxX - MinX
+    local Height = MaxY - MinY
+
+    -- Reject projection spikes caused by the camera being inside/very close
+    -- to a character. The next frame will retry automatically.
+    if Width < 2 or Height < 2
+        or Width > Viewport.X * 1.15
+        or Height > Viewport.Y * 1.15 then
+        return nil
+    end
+
     return MinX, MinY, MaxX, MaxY
 end
 
@@ -309,7 +348,7 @@ local Theme = {
     Accent2 = Color3.fromRGB(118, 146, 255),
     Green = Color3.fromRGB(96, 214, 148),
     Red = Color3.fromRGB(226, 92, 106),
-    Border = Color3.fromRGB(255, 255, 255),
+    Border = Color3.fromRGB(150, 154, 170),
 }
 
 local Icons = {
@@ -385,7 +424,7 @@ Main.AnchorPoint = Vector2.new(0.5, 0.5)
 Main.Size = UDim2.new(0, 680, 0, 470)
 Main.Position = UDim2.new(0.5, 0, 0.5, 0)
 Main.BackgroundColor3 = Theme.Background
-Main.BackgroundTransparency = 1
+Main.BackgroundTransparency = 0.08
 Main.BorderSizePixel = 0
 Main.ClipsDescendants = true
 Main.GroupTransparency = 1
@@ -407,20 +446,20 @@ Blur.Size = UDim2.new(1, 0, 1, 0)
 Blur.BackgroundColor3 = Theme.Surface
 Blur.BackgroundTransparency = 0.32
 Blur.BorderSizePixel = 0
-Blur.ZIndex = 1
+Blur.ZIndex = 0
 Blur.Parent = Main
 Corner(Blur, 18)
 
 local GlassGradient = Instance.new("UIGradient")
 GlassGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 255, 255)),
-    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 255, 255)),
-    ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 255, 255))
+    ColorSequenceKeypoint.new(0, Theme.Surface2),
+    ColorSequenceKeypoint.new(0.5, Theme.Surface3),
+    ColorSequenceKeypoint.new(1, Theme.Surface)
 })
 GlassGradient.Transparency = NumberSequence.new({
-    NumberSequenceKeypoint.new(0, 0.88),
-    NumberSequenceKeypoint.new(0.5, 0.75),
-    NumberSequenceKeypoint.new(1, 0.88)
+    NumberSequenceKeypoint.new(0, 0.72),
+    NumberSequenceKeypoint.new(0.5, 0.58),
+    NumberSequenceKeypoint.new(1, 0.78)
 })
 GlassGradient.Rotation = 45
 GlassGradient.Parent = Blur
@@ -820,12 +859,15 @@ local function Slider(PageObject, Title, Description, Min, Max, Step, Get, Set, 
         end
     end))
     Track(UserInputService.InputEnded:Connect(function(Input)
-        if Input.UserInputType == Enum.UserInputType.MouseButton1 or Input.UserInputType == Enum.UserInputType.Touch then
-            if Dragging then
-                Dragging = false
-                Tween(Knob, {Size = UDim2.new(0, 14, 0, 14)}, 0.2, Enum.EasingStyle.Back)
-                Tween(KnobStroke, {Transparency = 0.7, Color = Theme.Border}, 0.2)
-            end
+        if not Dragging then
+            return
+        end
+
+        if Input.UserInputType == Enum.UserInputType.MouseButton1
+            or Input.UserInputType == Enum.UserInputType.Touch then
+            Dragging = false
+            Tween(Knob, {Size = UDim2.new(0, 14, 0, 14)}, 0.2, Enum.EasingStyle.Back)
+            Tween(KnobStroke, {Transparency = 0.7, Color = Theme.Border}, 0.2)
         end
     end))
     Refresh(true)
@@ -891,8 +933,6 @@ local AntiFlingEnabled = false
 local SpectateEnabled = false
 local SpectateName = ""
 local TouchFlingEnabled = false
-local TouchFlingThread = nil
-
 local FOVCircle = NewDrawing("Circle")
 FOVCircle.Visible = false
 FOVCircle.Filled = false
@@ -927,38 +967,56 @@ local function ClosestTarget()
     return Best
 end
 
+local function StopTouchFling()
+    TouchFlingEnabled = false
+
+    if TouchFlingConnection then
+        pcall(function()
+            TouchFlingConnection:Disconnect()
+        end)
+        TouchFlingConnection = nil
+    end
+
+    local Character = LocalPlayer.Character
+    local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+    if Root then
+        Root.AssemblyLinearVelocity = Vector3.zero
+    end
+end
+
 local function UpdateTouchFling(State)
-    TouchFlingEnabled = State
-    if State then
-        local plr = Players.LocalPlayer
-        local rS = game:GetService("RunService")
-        local mov = 0.1
-        TouchFlingThread = coroutine.create(function()
-            while TouchFlingEnabled do
-                rS.Heartbeat:Wait()
-                local hrt = plr.Character and plr.Character:FindFirstChild("HumanoidRootPart")
-                if hrt then
-                    local vel = hrt.Velocity
-                    hrt.Velocity = vel * 1e15 + Vector3.new(0, 1e15, 0)
-                    rS.RenderStepped:Wait()
-                    hrt.Velocity = vel
-                    rS.Stepped:Wait()
-                    hrt.Velocity = vel + Vector3.new(0, mov, 0)
-                    mov = -mov
-                end
+    if not State then
+        StopTouchFling()
+        return
+    end
+
+    -- Always replace the old worker instead of creating multiple coroutines.
+    StopTouchFling()
+    TouchFlingEnabled = true
+
+    local Movement = 0.1
+    TouchFlingConnection = RunService.Heartbeat:Connect(function()
+        if not TouchFlingEnabled then
+            return
+        end
+
+        local Character = LocalPlayer.Character
+        local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+        if not Root or not Root.Parent then
+            return
+        end
+
+        local Velocity = Root.AssemblyLinearVelocity
+        Root.AssemblyLinearVelocity = Velocity * 1e3 + Vector3.new(0, 1e3, 0)
+
+        task.defer(function()
+            if TouchFlingEnabled and Root and Root.Parent then
+                Root.AssemblyLinearVelocity = Velocity + Vector3.new(0, Movement, 0)
             end
         end)
-        coroutine.resume(TouchFlingThread)
-    else
-        if TouchFlingThread then
-            coroutine.close(TouchFlingThread)
-            TouchFlingThread = nil
-        end
-        local hrt = Players.LocalPlayer.Character and Players.LocalPlayer.Character:FindFirstChild("HumanoidRootPart")
-        if hrt then
-            hrt.Velocity = Vector3.new(0, 0, 0)
-        end
-    end
+
+        Movement = -Movement
+    end)
 end
 
 Section(Combat, "AIM ASSIST", "Target selection and camera control", Icons.Combat)
