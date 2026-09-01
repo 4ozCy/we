@@ -150,9 +150,6 @@ local function GetBoundingBox(Character)
         return nil
     end
 
-    -- Use the model's world bounding box instead of projecting every limb
-    -- independently. This prevents a single off-screen/rotated limb from
-    -- stretching the corner box across the screen.
     local Ok, BoxCF, BoxSize = pcall(function()
         return Character:GetBoundingBox()
     end)
@@ -181,8 +178,6 @@ local function GetBoundingBox(Character)
                 if ScreenPosition.Z > 0.05 then
                     HasFrontPoint = true
 
-                    -- Clamp projected points so partially off-screen
-                    -- characters cannot create giant invalid boxes.
                     local SX = math.clamp(ScreenPosition.X, 0, Viewport.X)
                     local SY = math.clamp(ScreenPosition.Y, 0, Viewport.Y)
 
@@ -207,8 +202,6 @@ local function GetBoundingBox(Character)
     local Width = MaxX - MinX
     local Height = MaxY - MinY
 
-    -- Reject projection spikes caused by the camera being inside/very close
-    -- to a character. The next frame will retry automatically.
     if Width < 2 or Height < 2
         or Width > Viewport.X * 1.15
         or Height > Viewport.Y * 1.15 then
@@ -990,7 +983,6 @@ local function UpdateTouchFling(State)
         return
     end
 
-    -- Always replace the old worker instead of creating multiple coroutines.
     StopTouchFling()
     TouchFlingEnabled = true
 
