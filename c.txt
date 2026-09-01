@@ -22,18 +22,14 @@ if _G.CelvynCleanup then
     pcall(_G.CelvynCleanup)
 end
 local Connections = {}
-local TouchFlingConnection = nil
 local DrawingsList = {}
 local ESPObjects = {}
 local ControlRegistry = {}
 
 _G.CelvynCleanup = function()
     TouchFlingEnabled = false
-    if TouchFlingConnection then
-        pcall(function() TouchFlingConnection:Disconnect() end)
-        TouchFlingConnection = nil
-    end
-
+    if TouchFlingHeartbeat then pcall(function() TouchFlingHeartbeat:Disconnect() end) TouchFlingHeartbeat = nil end
+    if TouchFlingStepped then pcall(function() TouchFlingStepped:Disconnect() end) TouchFlingStepped = nil end
     for _, Connection in ipairs(Connections) do
         pcall(function() Connection:Disconnect() end)
     end
@@ -150,65 +146,60 @@ local function GetBoundingBox(Character)
         return nil
     end
 
-    local Ok, BoxCF, BoxSize = pcall(function()
-        return Character:GetBoundingBox()
-    end)
-
-    if not Ok or not BoxCF or not BoxSize then
+    local Root = Character:FindFirstChild("HumanoidRootPart")
+    local Humanoid = Character:FindFirstChildOfClass("Humanoid")
+    if not Root or not Humanoid or Humanoid.Health <= 0 then
         return nil
     end
 
-    local Half = BoxSize * 0.5
-    local MinX, MinY = math.huge, math.huge
-    local MaxX, MaxY = -math.huge, -math.huge
-    local HasFrontPoint = false
-    local HasScreenPoint = false
     local Viewport = Camera.ViewportSize
-
-    for X = -1, 1, 2 do
-        for Y = -1, 1, 2 do
-            for Z = -1, 1, 2 do
-                local WorldPoint = BoxCF:PointToWorldSpace(Vector3.new(
-                    Half.X * X,
-                    Half.Y * Y,
-                    Half.Z * Z
-                ))
-
-                local ScreenPosition = Camera:WorldToViewportPoint(WorldPoint)
-                if ScreenPosition.Z > 0.05 then
-                    HasFrontPoint = true
-
-                    local SX = math.clamp(ScreenPosition.X, 0, Viewport.X)
-                    local SY = math.clamp(ScreenPosition.Y, 0, Viewport.Y)
-
-                    MinX = math.min(MinX, SX)
-                    MinY = math.min(MinY, SY)
-                    MaxX = math.max(MaxX, SX)
-                    MaxY = math.max(MaxY, SY)
-
-                    if ScreenPosition.X >= 0 and ScreenPosition.X <= Viewport.X
-                        and ScreenPosition.Y >= 0 and ScreenPosition.Y <= Viewport.Y then
-                        HasScreenPoint = true
-                    end
-                end
-            end
-        end
-    end
-
-    if not HasFrontPoint or not HasScreenPoint or MinX == math.huge then
+    if Viewport.X <= 0 or Viewport.Y <= 0 then
         return nil
     end
 
-    local Width = MaxX - MinX
-    local Height = MaxY - MinY
+    -- Build a stable screen box from the root instead of the character's
+    -- animated limb bounds. Animated limbs can otherwise make the box jump,
+    -- rotate, stretch or disappear for a frame.
+    local RootHeight = math.max(Root.Size.Y, 2)
+    local TotalHeight = math.clamp(Humanoid.HipHeight * 2 + RootHeight + 2.5, 4, 9)
+    local TopWorld = Root.Position + Vector3.new(0, TotalHeight * 0.5, 0)
+    local BottomWorld = Root.Position - Vector3.new(0, TotalHeight * 0.5, 0)
 
-    if Width < 2 or Height < 2
-        or Width > Viewport.X * 1.15
-        or Height > Viewport.Y * 1.15 then
+    local Top, TopVisible = Camera:WorldToViewportPoint(TopWorld)
+    local Bottom, BottomVisible = Camera:WorldToViewportPoint(BottomWorld)
+
+    if Top.Z <= 0.05 or Bottom.Z <= 0.05 then
         return nil
     end
 
-    return MinX, MinY, MaxX, MaxY
+    local Height = math.abs(Bottom.Y - Top.Y)
+    if Height < 3 or Height > Viewport.Y * 0.95 then
+        return nil
+    end
+
+    -- Keep the box centered on the player's projected root. Width scales with
+    -- height, which stays stable even while the player is animating.
+    local CenterX = (Top.X + Bottom.X) * 0.5
+    local Width = math.clamp(Height * 0.48, 10, Viewport.X * 0.45)
+    local X = CenterX - Width * 0.5
+    local Y = math.min(Top.Y, Bottom.Y)
+    local MaxX = CenterX + Width * 0.5
+    local MaxY = math.max(Top.Y, Bottom.Y)
+
+    -- Clamp only the final screen rectangle. This prevents giant lines when
+    -- the player is partly outside the viewport while keeping the box visible.
+    X = math.clamp(X, 0, Viewport.X)
+    MaxX = math.clamp(MaxX, 0, Viewport.X)
+    Y = math.clamp(Y, 0, Viewport.Y)
+    MaxY = math.clamp(MaxY, 0, Viewport.Y)
+
+    Width = MaxX - X
+    Height = MaxY - Y
+    if Width < 3 or Height < 3 then
+        return nil
+    end
+
+    return X, Y, MaxX, MaxY
 end
 
 local function UpdateCornerBox(Data, X, Y, Width, Height, Color)
@@ -443,19 +434,10 @@ Blur.ZIndex = 0
 Blur.Parent = Main
 Corner(Blur, 18)
 
-local GlassGradient = Instance.new("UIGradient")
-GlassGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Theme.Surface2),
-    ColorSequenceKeypoint.new(0.5, Theme.Surface3),
-    ColorSequenceKeypoint.new(1, Theme.Surface)
-})
-GlassGradient.Transparency = NumberSequence.new({
-    NumberSequenceKeypoint.new(0, 0.72),
-    NumberSequenceKeypoint.new(0.5, 0.58),
-    NumberSequenceKeypoint.new(1, 0.78)
-})
-GlassGradient.Rotation = 45
-GlassGradient.Parent = Blur
+-- Keep the large glass surface solid/dark. A UIGradient over a full-screen
+-- CanvasGroup can produce bright/white compositing artifacts on some clients.
+Blur.BackgroundColor3 = Theme.Surface
+Blur.BackgroundTransparency = 0.08
 
 local Header = Instance.new("Frame")
 Header.Size = UDim2.new(1, 0, 0, 76)
@@ -525,13 +507,9 @@ Divider.Position = UDim2.new(0, 20, 0, 75)
 Divider.BackgroundColor3 = Theme.Border
 Divider.BorderSizePixel = 0
 Divider.Parent = Main
-local DividerGradient = Instance.new("UIGradient")
-DividerGradient.Color = ColorSequence.new({
-    ColorSequenceKeypoint.new(0, Color3.new(1, 1, 1), 1),
-    ColorSequenceKeypoint.new(0.5, Color3.new(1, 1, 1), 0.92),
-    ColorSequenceKeypoint.new(1, Color3.new(1, 1, 1), 1),
-})
-DividerGradient.Parent = Divider
+Divider.BackgroundColor3 = Color3.fromRGB(45, 46, 55)
+Divider.BackgroundTransparency = 0.35
+
 
 local Sidebar = Instance.new("Frame")
 Sidebar.Size = UDim2.new(0, 168, 1, -100)
@@ -960,20 +938,28 @@ local function ClosestTarget()
     return Best
 end
 
+local TouchFlingHeartbeat = nil
+local TouchFlingStepped = nil
+local TouchFlingFlip = 0.1
+local TouchFlingSavedVelocity = Vector3.zero
+
 local function StopTouchFling()
     TouchFlingEnabled = false
 
-    if TouchFlingConnection then
-        pcall(function()
-            TouchFlingConnection:Disconnect()
-        end)
-        TouchFlingConnection = nil
+    if TouchFlingHeartbeat then
+        pcall(function() TouchFlingHeartbeat:Disconnect() end)
+        TouchFlingHeartbeat = nil
+    end
+    if TouchFlingStepped then
+        pcall(function() TouchFlingStepped:Disconnect() end)
+        TouchFlingStepped = nil
     end
 
     local Character = LocalPlayer.Character
     local Root = Character and Character:FindFirstChild("HumanoidRootPart")
     if Root then
         Root.AssemblyLinearVelocity = Vector3.zero
+        Root.Velocity = Vector3.zero
     end
 end
 
@@ -985,29 +971,33 @@ local function UpdateTouchFling(State)
 
     StopTouchFling()
     TouchFlingEnabled = true
+    TouchFlingFlip = 0.1
 
-    local Movement = 0.1
-    TouchFlingConnection = RunService.Heartbeat:Connect(function()
-        if not TouchFlingEnabled then
-            return
-        end
+    -- Keep the two physics phases independent from GUI input. Touching a
+    -- checkbox/slider can consume UI input, but it cannot disconnect these.
+    TouchFlingHeartbeat = RunService.Heartbeat:Connect(function()
+        if not TouchFlingEnabled then return end
 
         local Character = LocalPlayer.Character
         local Root = Character and Character:FindFirstChild("HumanoidRootPart")
-        if not Root or not Root.Parent then
-            return
-        end
+        if not Root or not Root.Parent then return end
 
-        local Velocity = Root.AssemblyLinearVelocity
-        Root.AssemblyLinearVelocity = Velocity * 1e3 + Vector3.new(0, 1e3, 0)
+        TouchFlingSavedVelocity = Root.AssemblyLinearVelocity
+        local FlingVelocity = TouchFlingSavedVelocity * 1e4 + Vector3.new(0, 1e4, 0)
+        Root.AssemblyLinearVelocity = FlingVelocity
+        Root.Velocity = FlingVelocity
+    end)
 
-        task.defer(function()
-            if TouchFlingEnabled and Root and Root.Parent then
-                Root.AssemblyLinearVelocity = Velocity + Vector3.new(0, Movement, 0)
-            end
-        end)
+    TouchFlingStepped = RunService.Stepped:Connect(function()
+        if not TouchFlingEnabled then return end
 
-        Movement = -Movement
+        local Character = LocalPlayer.Character
+        local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+        if not Root or not Root.Parent then return end
+
+        Root.AssemblyLinearVelocity = TouchFlingSavedVelocity + Vector3.new(0, TouchFlingFlip, 0)
+        Root.Velocity = TouchFlingSavedVelocity + Vector3.new(0, TouchFlingFlip, 0)
+        TouchFlingFlip = -TouchFlingFlip
     end)
 end
 
@@ -1341,19 +1331,19 @@ Track(RunService.RenderStepped:Connect(function()
 end))
 
 Track(RunService.Heartbeat:Connect(function(Delta)
-    if AntiFlingEnabled then
-        local Character = LocalPlayer.Character
-        local Root = Character and Character:FindFirstChild("HumanoidRootPart")
-        if Root and Root.Velocity.Magnitude > 500 then
-            Root.AssemblyLinearVelocity = Vector3.new(0, 0, 0)
-            Root.AssemblyAngularVelocity = Vector3.new(0, 0, 0)
+    local Character = LocalPlayer.Character
+    local Root = Character and Character:FindFirstChild("HumanoidRootPart")
+
+    -- Anti-Fling must never overwrite Touch Fling's velocity.
+    if AntiFlingEnabled and not TouchFlingEnabled and Root then
+        if Root.AssemblyLinearVelocity.Magnitude > 500 then
+            Root.AssemblyLinearVelocity = Vector3.zero
+            Root.AssemblyAngularVelocity = Vector3.zero
         end
     end
 
     if not TPWalkEnabled then return end
-    local Character = LocalPlayer.Character
     local Humanoid = Character and Character:FindFirstChildOfClass("Humanoid")
-    local Root = Character and Character:FindFirstChild("HumanoidRootPart")
     if Humanoid and Root and Humanoid.MoveDirection.Magnitude > 0 then
         Character:PivotTo(Root.CFrame + Humanoid.MoveDirection * Delta * TPWalkSpeed * 10)
     end
